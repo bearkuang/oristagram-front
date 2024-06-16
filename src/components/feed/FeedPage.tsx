@@ -1,36 +1,37 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import CommentPop from './CommentPop';
 
-interface FollowedUser {
+interface User {
   id: number;
   username: string;
-  profile_picture: string | null; // 프로필 사진 필드가 null일 수 있으므로 nullable로 지정
+  profile_picture: string;
 }
 
 interface Feed {
   id: number;
-  author: {
-    username: string;
-    profile_picture: string | null;
-  };
+  author: User;
   image: string;
   created_at: string;
   like_count: number;
+  comment_count: number;
+  is_liked: boolean;
+  is_saved: boolean;
 }
 
-const getFullImageUrl = (url: string | null) => {
-  if (!url) {
-    return 'path/to/default/image.png'; // 기본 이미지 경로 설정
+const getFullImageUrl = (url: string) => {
+  if (url.startsWith('/media/')) {
+    return `http://localhost:8000${url}`;
   }
-  if (url.startsWith('http')) {
-    return url;
-  }
-  return `http://localhost:8000${url}`;
+  return url;
 };
 
 const FeedPage: React.FC = () => {
   const [feeds, setFeeds] = useState<Feed[]>([]);
-  const [followedUsers, setFollowedUsers] = useState<FollowedUser[]>([]);
+  const [followedUsers, setFollowedUsers] = useState<User[]>([]);
+  const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
+  const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
+  const [commentText, setCommentText] = useState('');
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -64,6 +65,113 @@ const FeedPage: React.FC = () => {
     fetchFeeds();
     fetchFollowedUsers();
   }, []);
+
+  const handleLike = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/like/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setFeeds((prevFeeds) => prevFeeds.map((feed) =>
+          feed.id === postId ? { ...feed, is_liked: true, like_count: feed.like_count + 1 } : feed
+        ));
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  const handleUnlike = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unlike/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setFeeds((prevFeeds) => prevFeeds.map((feed) =>
+          feed.id === postId ? { ...feed, is_liked: false, like_count: feed.like_count - 1 } : feed
+        ));
+      }
+    } catch (error) {
+      console.error('Error unliking post:', error);
+    }
+  };
+
+  const handleSave = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/mark/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setFeeds((prevFeeds) => prevFeeds.map((feed) =>
+          feed.id === postId ? { ...feed, is_saved: true } : feed
+        ));
+      }
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
+  };
+
+  const handleUnsave = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unmark/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setFeeds((prevFeeds) => prevFeeds.map((feed) =>
+          feed.id === postId ? { ...feed, is_saved: false } : feed
+        ));
+      }
+    } catch (error) {
+      console.error('Error unsaving post:', error);
+    }
+  };
+
+  const handleOpenCommentPop = (feed: Feed) => {
+    setSelectedFeed(feed);
+    setIsCommentPopOpen(true);
+  };
+
+  const handleCloseCommentPop = () => {
+    setIsCommentPopOpen(false);
+    setSelectedFeed(null);
+  };
+
+  const handleAddComment = async () => {
+    if (!selectedFeed || !commentText.trim()) return;
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${selectedFeed.id}/comment/`, {
+        text: commentText
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if (response.status === 201) {
+        // 댓글이 성공적으로 추가되면 댓글 수를 업데이트합니다.
+        setFeeds((prevFeeds) => prevFeeds.map((feed) =>
+          feed.id === selectedFeed.id ? { ...feed, comment_count: feed.comment_count + 1 } : feed
+        ));
+        setCommentText('');
+      }
+    } catch (error) {
+      console.error('Error adding comment:', error);
+    }
+  };
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
@@ -188,13 +296,19 @@ const FeedPage: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap gap-4 px-4 py-2 py-2 justify-between">
                   <div className="flex items-center justify-center gap-2 px-3 py-2">
-                    <div className="text-[#637588]" data-icon="Heart" data-size="24px" data-weight="regular">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                        <path
-                          d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"
-                        ></path>
-                      </svg>
-                    </div>
+                    {feed.is_liked ? (
+                      <button onClick={() => handleUnlike(feed.id)} className="text-[#e74c3c]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                          <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
+                        </svg>
+                      </button>
+                    ) : (
+                      <button onClick={() => handleLike(feed.id)} className="text-[#637588]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                          <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
+                        </svg>
+                      </button>
+                    )}
                     <p className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">{feed.like_count}</p>
                   </div>
                   <div className="flex items-center justify-center gap-2 px-3 py-2">
@@ -205,17 +319,32 @@ const FeedPage: React.FC = () => {
                         ></path>
                       </svg>
                     </div>
-                    <p className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">345</p>
+                    <button
+                      onClick={() => handleOpenCommentPop(feed)}
+                      className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]"
+                    >
+                      댓글 달기...
+                    </button>
                   </div>
                   <div className="flex items-center justify-center gap-2 px-3 py-2">
-                    <div className="text-[#637588]" data-icon="PaperPlaneTilt" data-size="24px" data-weight="regular">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                        <path
-                          d="M227.32,28.68a16,16,0,0,0-15.66-4.08l-.15,0L19.57,82.84a16,16,0,0,0-2.42,29.84l85.62,40.55,40.55,85.62A15.86,15.86,0,0,0,157.74,248q.69,0,1.38-.06a15.88,15.88,0,0,0,14-11.51l58.2-191.94c0-.05,0-.1,0-.15A16,16,0,0,0,227.32,28.68ZM157.83,231.85l-.05.14L118.42,148.9l47.24-47.25a8,8,0,0,0-11.31-11.31L107.1,137.58,24,98.22l.14,0L216,40Z"
-                        ></path>
-                      </svg>
-                    </div>
-                    <p className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">678</p>
+                    {feed.is_saved ? (
+                      <button onClick={() => handleUnsave(feed.id)} className="text-[#ff9800]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                          <path
+                            d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
+                          ></path>
+                        </svg>
+                      </button>
+                    ) : (
+                      <button onClick={() => handleSave(feed.id)} className="text-[#637588]">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                          <path
+                            d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
+                          ></path>
+                        </svg>
+                      </button>
+                    )}
+                    <p className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">{feed.like_count}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 justify-between">
@@ -226,44 +355,21 @@ const FeedPage: React.FC = () => {
                     ></div>
                     <div className="flex flex-col justify-center">
                       <p className="text-[#111418] text-base font-medium leading-normal line-clamp-1">{feed.author.username}</p>
-                      <p className="text-[#637588] text-sm font-normal leading-normal line-clamp-2">View all 23 comments</p>
+                      <p className="text-[#637588] text-sm font-normal leading-normal line-clamp-2">댓글 {feed.comment_count}개 모두 보기</p>
                     </div>
                   </div>
                   <div className="shrink-0">
-                    <p className="text-[#637588] text-sm font-normal leading-normal">1 hour ago</p>
+                    <p className="text-[#637588] text-sm font-normal leading-normal">1시간 전</p>
                   </div>
-                </div>
-                <div className="flex items-center px-4 py-3 gap-3 @container">
-                  <label className="flex flex-col min-w-40 h-12 flex-1">
-                    <div className="flex w-full flex-1 items-stretch rounded-xl h-full">
-                      <input
-                        placeholder="Add a comment..."
-                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#111418] focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] focus:border-none h-full placeholder:text-[#637588] px-4 rounded-r-none border-r-0 pr-2 text-base font-normal leading-normal"
-                        value=""
-                      />
-                      <div className="flex border-none bg-[#f0f2f4] items-center justify-center pr-4 rounded-r-xl border-l-0 !pr-2">
-                        <div className="flex items-center gap-4 justify-end">
-                          <div className="flex items-center gap-1">
-                            <button className="flex items-center justify-center p-1.5">
-                              <div className="text-[#637588]" data-icon="Smiley" data-size="20px" data-weight="regular">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                                  <path
-                                    d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z"
-                                  ></path>
-                                </svg>
-                              </div>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
                 </div>
               </div>
             ))}
           </div>
         </div>
       </div>
+      {isCommentPopOpen && selectedFeed && (
+        <CommentPop feed={selectedFeed} onClose={handleCloseCommentPop} />
+      )}
     </div>
   );
 };
