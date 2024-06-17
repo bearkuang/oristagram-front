@@ -7,6 +7,7 @@ interface CommentPopProps {
 }
 
 const getFullImageUrl = (url: string) => {
+  if (!url) return '';
   if (url.startsWith('/media/')) {
     return `http://localhost:8000${url}`;
   }
@@ -15,13 +16,15 @@ const getFullImageUrl = (url: string) => {
 
 const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const [comments, setComments] = useState<any[]>([]);
-  const [newComment, setNewComment] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [currentFeed, setCurrentFeed] = useState(feed);
 
   useEffect(() => {
     const fetchComments = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://localhost:8000/api/posts/${feed.id}/comments/`, {
+        const response = await axios.get(`http://localhost:8000/api/posts/${currentFeed.id}/comments/`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -33,37 +36,125 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
     };
 
     fetchComments();
-  }, [feed.id]);
+  }, [currentFeed.id]);
 
   const handleAddComment = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${feed.id}/comment/`, { content: newComment }, {
+      const response = await axios.post(`http://localhost:8000/api/posts/${currentFeed.id}/comment/`, { text: commentText }, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-      if (response.status === 200) {
+      if (response.status === 201) {
         setComments([...comments, response.data]);
-        setNewComment('');
+        setCommentText('');
       }
     } catch (error) {
       console.error('Error adding comment:', error);
     }
   };
 
+  const handleLike = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/like/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setCurrentFeed((prevFeed: { like_count: number; }) => ({ ...prevFeed, is_liked: true, like_count: prevFeed.like_count + 1 }));
+      }
+    } catch (error) {
+      console.error('Error liking post:', error);
+    }
+  };
+
+  const handleUnlike = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unlike/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setCurrentFeed((prevFeed: { like_count: number; }) => ({ ...prevFeed, is_liked: false, like_count: prevFeed.like_count - 1 }));
+      }
+    } catch (error) {
+      console.error('Error unliking post:', error);
+    }
+  };
+
+  const handleSave = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/mark/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setCurrentFeed((prevFeed: any) => ({ ...prevFeed, is_saved: true }));
+      }
+    } catch (error) {
+      console.error('Error saving post:', error);
+    }
+  };
+
+  const handleUnsave = async (postId: number) => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unmark/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 200) {
+        setCurrentFeed((prevFeed: any) => ({ ...prevFeed, is_saved: false }));
+      }
+    } catch (error) {
+      console.error('Error unsaving post:', error);
+    }
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? currentFeed.images.length - 1 : prevIndex - 1));
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) => (prevIndex === currentFeed.images.length - 1 ? 0 : prevIndex + 1));
+  };
+
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white w-[1102px] h-[694px] flex">
-        <div className="w-[702px] bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${getFullImageUrl(feed.image)})` }} />
+        <div className="relative w-[702px] bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${getFullImageUrl(currentFeed.images[currentImageIndex]?.image)})` }}>
+          {currentFeed.images.length > 1 && (
+            <>
+              <button onClick={handlePrevImage} className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-500 bg-opacity-50 text-white p-2 rounded-full">
+                &lt;
+              </button>
+              <button onClick={handleNextImage} className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-500 bg-opacity-50 text-white p-2 rounded-full">
+                &gt;
+              </button>
+              <div className="absolute bottom-0 w-full flex justify-center pb-2">
+                {currentFeed.images.map((_: any, index: React.Key | null | undefined) => (
+                  <span key={index} className={`mx-1 w-2 h-2 rounded-full ${currentImageIndex === index ? 'bg-white' : 'bg-gray-400'}`}></span>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
         <div className="w-[400px] bg-white flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-gray-300">
             <div className="flex items-center">
               <div
                 className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-10 w-10"
-                style={{ backgroundImage: `url(${getFullImageUrl(feed.author.profile_picture)})` }}
+                style={{ backgroundImage: `url(${getFullImageUrl(currentFeed.author.profile_picture)})` }}
               ></div>
-              <span className="ml-2 text-sm font-medium text-gray-700">{feed.author.username}</span>
+              <span className="ml-2 text-sm font-medium text-gray-700">{currentFeed.author.username}</span>
             </div>
             <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,26 +171,72 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
                 ></div>
                 <div className="ml-2">
                   <span className="block text-sm font-medium text-gray-700">{comment.user.username}</span>
-                  <span className="block text-sm text-gray-500">{comment.content}</span>
+                  <span className="block text-sm text-gray-500">{comment.text}</span>
                   <span className="block text-xs text-gray-400">{new Date(comment.created_at).toLocaleString()}</span>
                 </div>
               </div>
             ))}
           </div>
           <div className="p-4 border-t border-gray-300 flex items-center">
-            <input
-              type="text"
-              placeholder="Add a comment..."
-              className="flex-1 p-2 border rounded-lg mr-2"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
-            <button
-              onClick={handleAddComment}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-            >
-              게시
-            </button>
+            <div className="flex flex-wrap gap-4 px-4 py-2 py-2 justify-between">
+              <div className="flex items-center justify-center gap-2 px-3 py-2">
+                {currentFeed.is_liked ? (
+                  <button onClick={() => handleUnlike(currentFeed.id)} className="text-[#e74c3c]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                      <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
+                    </svg>
+                  </button>
+                ) : (
+                  <button onClick={() => handleLike(currentFeed.id)} className="text-[#637588]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                      <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
+                    </svg>
+                  </button>
+                )}
+                <p className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">{currentFeed.like_count}</p>
+              </div>
+              <div className="flex items-center justify-center gap-2 px-3 py-2">
+                <div className="text-[#637588]" data-icon="ChatCircle" data-size="24px" data-weight="regular">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                    <path
+                      d="M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"
+                    ></path>
+                  </svg>
+                </div>
+              </div>
+              <div className="flex items-center justify-center gap-2 px-3 py-2">
+                {currentFeed.is_saved ? (
+                  <button onClick={() => handleUnsave(currentFeed.id)} className="text-[#ff9800]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                      <path
+                        d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
+                      ></path>
+                    </svg>
+                  </button>
+                ) : (
+                  <button onClick={() => handleSave(currentFeed.id)} className="text-[#637588]">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                      <path
+                        d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
+                      ></path>
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <input
+                type="text"
+                placeholder="댓글 달기..."
+                className="flex-1 p-2 border rounded-lg mr-2"
+                value={commentText}
+                onChange={(e) => setCommentText(e.target.value)}
+              />
+              <button
+                onClick={handleAddComment}
+                className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+              >
+                게시
+              </button>
+            </div>
           </div>
         </div>
       </div>
