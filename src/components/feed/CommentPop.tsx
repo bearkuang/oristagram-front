@@ -130,7 +130,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white w-[1102px] h-[694px] flex">
-        <div className="relative w-[702px] bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${getFullImageUrl(currentFeed.images[currentImageIndex]?.image)})` }}>
+        <div className="relative w-[702px] bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${getFullImageUrl(currentFeed.images[currentImageIndex]?.file)})` }}>
           {currentFeed.images.length > 1 && (
             <>
               <button onClick={handlePrevImage} className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-500 bg-opacity-50 text-white p-2 rounded-full">

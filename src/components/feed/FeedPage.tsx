@@ -3,6 +3,7 @@ import axios from 'axios';
 import CommentPop from './CommentPop';
 import CreateFeed from './CreateFeed';
 import { getFullImageUrl } from '../../services/utils';
+import { useNavigate } from "react-router-dom";
 
 interface User {
   id: number;
@@ -12,7 +13,7 @@ interface User {
 
 interface Image {
   id: number;
-  image: string;
+  file: string;
 }
 interface Feed {
   id: number;
@@ -31,10 +32,11 @@ const FeedPage: React.FC = () => {
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
-  const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false); // CreateFeed 모달 상태
+  const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [commentText, setCommentText] = useState('');
   const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: number]: number }>({});
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -180,7 +182,6 @@ const FeedPage: React.FC = () => {
       });
 
       if (response.status === 201) {
-        // 댓글이 성공적으로 추가되면 댓글 수를 업데이트합니다.
         setFeeds((prevFeeds) => prevFeeds.map((feed) =>
           feed.id === selectedFeed.id ? { ...feed, comment_count: feed.comment_count + 1 } : feed
         ));
@@ -219,15 +220,19 @@ const FeedPage: React.FC = () => {
     setIsCreateFeedOpen(false);
   };
 
+  const handleOpenProfile = () => {
+    navigate("/profile");
+  }
+
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
-        <div className="flex justify-betweem">
+        <div className="flex justify-between">
           <div className="layout-content-container flex flex-col w-60 border-r border-gray-300">
             <div className="flex h-full min-h-[700px] flex-col justify-between bg-white p-4">
               <div className="flex flex-col gap-4">
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
                     <div className="text-[#111418]" data-icon="House" data-size="24px" data-weight="fill">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                         <path
@@ -275,7 +280,7 @@ const FeedPage: React.FC = () => {
                     </div>
                     <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Shop</p>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenProfile}>
                     {currentUser ? (
                       <div
                         className="bg-center bg-no-repeat bg-cover rounded-full h-6 w-6"
@@ -354,7 +359,7 @@ const FeedPage: React.FC = () => {
                     <div className="w-full gap-1 overflow-hidden bg-white @[480px]:gap-2 aspect-[2/3] flex">
                       <div
                         className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
-                        style={{ backgroundImage: `url(${getFullImageUrl(feed.images[currentImageIndexes[feed.id] || 0]?.image || '')})` }}
+                        style={{ backgroundImage: `url(${getFullImageUrl(feed.images[currentImageIndexes[feed.id] || 0]?.file || '')})` }}
                       ></div>
                     </div>
                   </div>
