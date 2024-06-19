@@ -3,6 +3,7 @@ import axios from 'axios';
 import { getFullImageUrl } from '../../services/utils';
 import { useNavigate } from "react-router-dom";
 import CreateFeed from '../feed/CreateFeed';
+import CommentPop from '../feed/CommentPop';
 
 interface User {
   id: number;
@@ -16,18 +17,35 @@ interface User {
   posts_count: number;
 }
 
+interface Image {
+  id: number;
+  file: string;
+}
+
 interface Post {
   id: number;
   content: string;
-  images: { id: number; file: string; }[];
+  images: Image[];
   created_at: string;
+}
+
+interface Feed extends Post {
+  author: User;
+  like_count: number;
+  comment_count: number;
+  is_liked: boolean;
+  is_saved: boolean;
 }
 
 const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [posts, setPosts] = useState<Post[]>([]);
+  const [posts, setPosts] = useState<Feed[]>([]);
+  const [savedPosts, setSavedPosts] = useState<Feed[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
+  const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
+  const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
+  const [feedType, setFeedType] = useState<'posts' | 'saved'>('posts');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -48,6 +66,7 @@ const ProfilePage: React.FC = () => {
         console.log('Profile data:', response.data);
         setUser(response.data);
         setPosts(response.data.posts);
+        setSavedPosts(response.data.saved_posts);
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -92,7 +111,19 @@ const ProfilePage: React.FC = () => {
 
   const handleOpenProfile = () => {
     navigate("/profile");
-  }
+  };
+
+  const handleOpenCommentPop = (feed: Feed) => {
+    setSelectedFeed(feed);
+    setIsCommentPopOpen(true);
+  };
+
+  const handleCloseCommentPop = () => {
+    setIsCommentPopOpen(false);
+    setSelectedFeed(null);
+  };
+
+  const filteredFeeds = feedType === 'posts' ? posts : savedPosts;
 
   return (
     <div className='container mx-auto p-4 flex'>
@@ -171,11 +202,13 @@ const ProfilePage: React.FC = () => {
       </div>
       <div className='flex-1'>
         <div className='flex flex-col items-center md:flex-row md:items-start'>
-          <img
-            src={getFullImageUrl(user.profile_picture)}
-            alt={`${user.username}'s profile`}
-            className='w-32 h-32 rounded-full mr-4 mb-4 md:mb-0'
-          />
+          <div className='w-32 h-32 rounded-full overflow-hidden mr-4 mb-4 md:mb-0'>
+            <img
+              src={getFullImageUrl(user.profile_picture)}
+              alt={`${user.username}'s profile`}
+              className='w-full h-full object-cover'
+            />
+          </div>
           <div>
             <h1 className='text-3xl font-bold'>{user.username}</h1>
             <div className='flex mt-4'>
@@ -202,20 +235,35 @@ const ProfilePage: React.FC = () => {
             <a href={user.website} target="_blank" rel="noopener noreferrer" className='text-blue-500'>{user.website}</a>
           </div>
         </div>
-        <div className='mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-300 py-2'>
-          {posts.map(post => (
-            <div key={post.id} className='border rounded-lg overflow-hidden'>
-              {post.images.length > 0 && (
-                <img
-                  src={getFullImageUrl(post.images[0].file)}
-                  alt="Post image"
-                  className='w-full h-64 object-cover'
-                />
-              )}
-            </div>
-          ))}
+        <div className='mt-6'>
+          <div className='flex justify-center border-b border-gray-300 mb-4'>
+            <button className={`mx-2 px-4 py-2 flex items-center ${feedType === 'posts' ? 'border-b-2 border-black' : ''}`} onClick={() => setFeedType('posts')}>
+              <img src="https://i.ibb.co/BG5fQTK/feeds-icon.png" alt="feeds icon" className='w-4 h-4 mr-2' />
+              게시물
+            </button>
+            <button className={`mx-2 px-4 py-2 flex items-center ${feedType === 'saved' ? 'border-b-2 border-black' : ''}`} onClick={() => setFeedType('saved')}>
+              <svg className='w-4 h-4 mr-2' fill='currentColor' viewBox='0 0 256 256'><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path></svg>
+              저장됨
+            </button>
+          </div>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            {filteredFeeds.map(feed => (
+              <div key={feed.id} className='border rounded-lg overflow-hidden' onClick={() => handleOpenCommentPop(feed)}>
+                {feed.images.length > 0 && (
+                  <img
+                    src={getFullImageUrl(feed.images[0].file)}
+                    alt="Post image"
+                    className='w-full h-64 object-cover'
+                  />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
+      {isCommentPopOpen && selectedFeed && (
+        <CommentPop feed={selectedFeed} onClose={handleCloseCommentPop} />
+      )}
       {isCreateFeedOpen && <CreateFeed onClose={handleCloseCreateFeed} />}
     </div>
   );
