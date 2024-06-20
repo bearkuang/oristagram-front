@@ -4,6 +4,7 @@ import CommentPop from './CommentPop';
 import CreateFeed from './CreateFeed';
 import { getFullImageUrl } from '../../services/utils';
 import { useNavigate } from "react-router-dom";
+import Sidebar from './Siderbar';
 
 interface User {
   id: number;
@@ -36,6 +37,7 @@ const FeedPage: React.FC = () => {
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [commentText, setCommentText] = useState('');
   const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: number]: number }>({});
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -224,6 +226,10 @@ const FeedPage: React.FC = () => {
     navigate("/profile");
   }
 
+  const handleSidebarToggle = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
@@ -242,7 +248,7 @@ const FeedPage: React.FC = () => {
                     </div>
                     <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Origram</p>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleSidebarToggle}>
                     <div className="text-[#111418]" data-icon="Compass" data-size="24px" data-weight="regular">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                         <path
@@ -301,6 +307,7 @@ const FeedPage: React.FC = () => {
               </div>
             </div>
           </div>
+          <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
           <div className="gap-1 px-6 flex flex-1 justify-center py-5">
             <div className="layout-content-container flex flex-col max-w-[960px] ml-5 flex-1">
               {followedUsers.length > 0 && (
