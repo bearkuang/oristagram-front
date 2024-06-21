@@ -58,6 +58,7 @@ const LoginPage: React.FC = () => {
             <label className="flex flex-col min-w-40 h-14 w-full">
               <div className="flex w-full flex-1 items-stretch rounded-xl h-full">
                 <input
+                  type="password"
                   placeholder="Password"
                   className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-xl text-[#111418] focus:outline-0 focus:ring-0 border border-[#dce0e5] bg-white focus:border-[#dce0e5] h-14 placeholder:text-[#637588] p-[15px] text-base font-normal leading-normal"
                   value={password}
