@@ -56,9 +56,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         onClose();
     };
 
+    const handleUserClick = (userId: number) => {
+        navigate(`/user/${userId}`);
+        onClose();
+    };
+
     return (
         <div
-            className={`fixed top-0 left-0 w-80 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ zIndex: 50, display: isOpen ? 'block' : 'none', marginLeft: '240px' }}
+            className={`fixed top-0 left-0 w-80 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+            style={{ zIndex: 50, display: isOpen ? 'block' : 'none', marginLeft: '240px' }}
         >
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
                 <h2 className="text-xl font-bold">Explore</h2>
@@ -90,7 +96,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                         <div>
                             <ul>
                                 {searchResults.users.map((user) => (
-                                    <li key={user.id} className="flex items-center py-2 border-b border-gray-300">
+                                    <li key={user.id} className="flex items-center py-2 border-b border-gray-300 cursor-pointer" onClick={() => handleUserClick(user.id)}>
                                         <div
                                             className="bg-center bg-no-repeat bg-cover rounded-full h-6 w-6 mr-2"
                                             style={{ backgroundImage: `url(${getFullImageUrl(user.profile_picture)})`, height: '32px', width: '32px' }}
