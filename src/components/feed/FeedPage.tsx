@@ -16,6 +16,7 @@ interface Image {
   id: number;
   file: string;
 }
+
 interface Feed {
   id: number;
   author: User;
@@ -35,7 +36,7 @@ const FeedPage: React.FC = () => {
   const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
   const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
-  const [commentText, setCommentText] = useState('');
+  const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
   const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: number]: number }>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const navigate = useNavigate();
@@ -170,12 +171,13 @@ const FeedPage: React.FC = () => {
     setSelectedFeed(null);
   };
 
-  const handleAddComment = async () => {
-    if (!selectedFeed || !commentText.trim()) return;
+  const handleAddComment = async (feedId: number) => {
+    const commentText = commentTexts[feedId];
+    if (!commentText || !commentText.trim()) return;
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${selectedFeed.id}/comment/`, {
+      const response = await axios.post(`http://localhost:8000/api/posts/${feedId}/comment/`, {
         text: commentText
       }, {
         headers: {
@@ -185,13 +187,17 @@ const FeedPage: React.FC = () => {
 
       if (response.status === 201) {
         setFeeds((prevFeeds) => prevFeeds.map((feed) =>
-          feed.id === selectedFeed.id ? { ...feed, comment_count: feed.comment_count + 1 } : feed
+          feed.id === feedId ? { ...feed, comment_count: feed.comment_count + 1 } : feed
         ));
-        setCommentText('');
+        setCommentTexts((prevTexts) => ({ ...prevTexts, [feedId]: '' }));
       }
     } catch (error) {
       console.error('Error adding comment:', error);
     }
+  };
+
+  const handleCommentTextChange = (feedId: number, text: string) => {
+    setCommentTexts((prevTexts) => ({ ...prevTexts, [feedId]: text }));
   };
 
   const handlePrevImage = (feedId: number) => {
@@ -230,6 +236,10 @@ const FeedPage: React.FC = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleOpenReels = () => {
+    navigate("/reels");
+  }
+
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
       <div className="layout-container flex h-full grow flex-col">
@@ -266,7 +276,7 @@ const FeedPage: React.FC = () => {
                     </div>
                     <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create</p>
                   </div>
-                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
+                  <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenReels}>
                     <div className="text-[#111418]" data-icon="MonitorPlay" data-size="24px" data-weight="regular">
                       <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
                         <path
@@ -420,7 +430,6 @@ const FeedPage: React.FC = () => {
                           </svg>
                         </button>
                       )}
-                      <p className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">{feed.like_count}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 justify-between">
@@ -431,7 +440,7 @@ const FeedPage: React.FC = () => {
                       ></div>
                       <div className="flex flex-col justify-center">
                         <p className="text-[#111418] text-base font-medium leading-normal line-clamp-1">{feed.author.username}</p>
-                        <p className="text-[#637588] text-sm font-normal leading-normal line-clamp-2">댓글 {feed.comment_count}개 모두 보기</p>
+                        <p className="text-[#637588] text-sm font-normal leading-normal line-clamp-2 cursor-pointer" onClick={() => handleOpenCommentPop(feed)}>댓글 {feed.comment_count}개 모두 보기</p>
                       </div>
                     </div>
                     <div className="shrink-0">
@@ -443,11 +452,11 @@ const FeedPage: React.FC = () => {
                       type="text"
                       placeholder="댓글 달기..."
                       className="flex-1 p-2 mr-2 w-full"
-                      value={commentText}
-                      onChange={(e) => setCommentText(e.target.value)}
+                      value={commentTexts[feed.id] || ''}
+                      onChange={(e) => handleCommentTextChange(feed.id, e.target.value)}
                     />
                     <button
-                      onClick={handleAddComment}
+                      onClick={() => handleAddComment(feed.id)}
                       className="text-blue-700 px-4 py-2 rounded-lg"
                     >
                       게시

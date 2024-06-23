@@ -24,6 +24,11 @@ interface Image {
   file: string;
 }
 
+interface Video {
+  id: number;
+  file: string;
+}
+
 interface Post {
   id: number;
   content: string;
@@ -37,12 +42,15 @@ interface Feed extends Post {
   comment_count: number;
   is_liked: boolean;
   is_saved: boolean;
+  videos?: Video[]; // Optional videos property
 }
 
 const ProfilePage: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Feed[]>([]);
+  const [reels, setReels] = useState<Feed[]>([]);
   const [savedPosts, setSavedPosts] = useState<Feed[]>([]);
+  const [savedReels, setSavedReels] = useState<Feed[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
   const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
@@ -69,7 +77,9 @@ const ProfilePage: React.FC = () => {
         console.log('Profile data:', response.data);
         setUser(response.data);
         setPosts(response.data.posts);
+        setReels(response.data.reels);
         setSavedPosts(response.data.saved_posts);
+        setSavedReels(response.data.saved_reels);
       } catch (error) {
         console.error('Error fetching profile:', error);
       }
@@ -130,7 +140,11 @@ const ProfilePage: React.FC = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const filteredFeeds = feedType === 'posts' ? posts : savedPosts;
+  const handleEditProfile = () => {
+    navigate("/settings");
+  };
+
+  const filteredFeeds = feedType === 'posts' ? [...posts, ...reels] : [...savedPosts, ...savedReels];
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
@@ -222,7 +236,12 @@ const ProfilePage: React.FC = () => {
                 />
               </div>
               <div>
-                <h1 className='text-3xl font-bold'>{user.username}</h1>
+                <div className='flex items-center'>
+                  <h1 className='text-3xl font-bold'>{user.username}</h1>
+                  <button className='ml-4 px-4 py-2 border rounded-md text-sm font-semibold' onClick={handleEditProfile}>
+                    프로필 편집
+                  </button>
+                </div>
                 <p className='text-1xl font-bold py-2'>{user.name}</p>
                 <div className='flex mt-4'>
                   <div className='flex-2'>
@@ -255,18 +274,27 @@ const ProfilePage: React.FC = () => {
                   게시물
                 </button>
                 <button className={`mx-2 px-4 py-2 flex items-center ${feedType === 'saved' ? 'border-b-2 border-black' : ''}`} onClick={() => setFeedType('saved')}>
-                  <svg className='w-4 h-4 mr-2' fill='currentColor' viewBox='0 0 256 256'><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path></svg>
+                  <svg className='w-4 h-4 mr-2' fill='currentColor' viewBox='0 0 256 256'>
+                    <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path>
+                  </svg>
                   저장됨
                 </button>
               </div>
               <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                {filteredFeeds.map(feed => (
+                {filteredFeeds.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(feed => (
                   <div key={feed.id} className='border rounded-lg overflow-hidden' onClick={() => handleOpenCommentPop(feed)}>
-                    {feed.images.length > 0 && (
+                    {'images' in feed && feed.images.length > 0 && (
                       <img
                         src={getFullImageUrl(feed.images[0].file)}
                         alt="Post image"
                         className='w-full h-64 object-cover'
+                      />
+                    )}
+                    {'videos' in feed && feed.videos && feed.videos.length > 0 && (
+                      <video
+                        src={getFullImageUrl(feed.videos[0].file)}
+                        className='w-full h-64 object-cover'
+                        controls
                       />
                     )}
                   </div>

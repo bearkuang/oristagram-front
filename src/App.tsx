@@ -9,6 +9,8 @@ import JoinPage from './components/user/JoinPage';
 import BirthPage from './components/user/BirthPage';
 import SettingProfilePage from './components/user/SettingProfilePage';
 import { RegisterProvider } from './context/RegisterContext';
+import ReelsPage from './components/reels/ReelsPage';
+import Settings from './components/settings/Settings';
 
 const App: React.FC = () => {
     return (
@@ -23,6 +25,8 @@ const App: React.FC = () => {
                     <Route path="/register" element={<JoinPage />} />
                     <Route path="/register/birth" element={<BirthPage />} />
                     <Route path="/register/setting-profile" element={<SettingProfilePage />} />
+                    <Route path="/reels" element={<ReelsPage />} />
+                    <Route path="/settings" element={<Settings />} />
                 </Routes>
             </Router>
         </RegisterProvider>
