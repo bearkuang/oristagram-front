@@ -11,13 +11,14 @@ import SettingProfilePage from './components/user/SettingProfilePage';
 import { RegisterProvider } from './context/RegisterContext';
 import ReelsPage from './components/reels/ReelsPage';
 import Settings from './components/settings/Settings';
+import ChatList from './components/chat/ChatList';
 
 const App: React.FC = () => {
     return (
         <RegisterProvider>
             <Router>
                 <Routes>
-                    <Route path="/login" element={<LoginPage />} />
+                    <Route path="/" element={<LoginPage />} />
                     <Route path="/feed" element={<FeedPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/tagged/:tag" element={<TaggedPage />} />
@@ -27,6 +28,7 @@ const App: React.FC = () => {
                     <Route path="/register/setting-profile" element={<SettingProfilePage />} />
                     <Route path="/reels" element={<ReelsPage />} />
                     <Route path="/settings" element={<Settings />} />
+                    <Route path="/chat" element={<ChatList />} />
                 </Routes>
             </Router>
         </RegisterProvider>

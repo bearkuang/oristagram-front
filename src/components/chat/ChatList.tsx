@@ -1,112 +1,44 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { getFullImageUrl } from '../../services/utils';
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import CreateFeed from '../feed/CreateFeed';
 import Sidebar from '../feed/Siderbar';
+import CreateChatModal from './CreateChatModal';
+import ChatRoom from './ChatRoom';
 
 interface User {
     id: number;
     username: string;
-    name: string;
     profile_picture: string;
+    name: string;
+    website: string;
     bio: string;
     birth_date: string;
-    website: string;
-    followers_count: number;
-    following_count: number;
-    posts_count: number;
 }
 
-interface Image {
-    id: number;
-    file: string;
+interface ChatRoom {
+    chatroom_id: number;
+    user: User;
 }
 
-interface Video {
-    id: number;
-    file: string;
-}
-
-interface Post {
-    id: number;
-    content: string;
-    images: Image[];
-    created_at: string;
-}
-
-interface Reel {
-    id: number;
-    content: string;
-    videos: Video[];
-    created_at: string;
-}
-
-interface Feed extends Post {
-    author: User;
-    like_count: number;
-    comment_count: number;
-    is_liked: boolean;
-    is_saved: boolean;
-}
-
-const UserPage: React.FC = () => {
-    const [user, setUser] = useState<User | null>(null);
-    const { userId } = useParams<{ userId: string }>();
-    const [feeds, setFeeds] = useState<Feed[]>([]);
-    const [reels, setReels] = useState<Reel[]>([]);
+const ChatList: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
+    const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
     const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
-    const [feedType, setFeedType] = useState<'posts' | 'reels'>('posts');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
+    const [activeChatRoomId, setActiveChatRoomId] = useState<number | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/users/profile/${userId}/`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                setUser(response.data);
-            } catch (error) {
-                console.error('Error fetching user data:', error);
-            }
-        };
-
-        const fetchFeeds = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/posts/user/${userId}/`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                setFeeds(response.data);
-            } catch (error) {
-                console.error('Error fetching posts:', error);
-            }
-        };
-
-        const fetchReels = async () => {
-            try {
-                const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/reels/user/${userId}/`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-                setReels(response.data);
-            } catch (error) {
-                console.error('Error fetching reels:', error);
-            }
-        };
-
         const fetchCurrentUser = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
                 const response = await axios.get('http://localhost:8000/api/users/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`
@@ -118,13 +50,29 @@ const UserPage: React.FC = () => {
             }
         };
 
-        fetchUserData();
-        fetchFeeds();
-        fetchReels();
-        fetchCurrentUser();
-    }, [navigate, userId]);
+        const fetchChatRooms = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
+                const response = await axios.get('http://localhost:8000/api/chatrooms/my_chatrooms/', {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setChatRooms(response.data);
+            } catch (error) {
+                console.error('Error fetching chat rooms:', error);
+            }
+        };
 
-    if (!user) {
+        fetchCurrentUser();
+        fetchChatRooms();
+    }, [navigate]);
+
+    if (!currentUser) {
         return <div>Loading...</div>;
     }
 
@@ -144,14 +92,28 @@ const UserPage: React.FC = () => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
+    const handleOpenCreateChatModal = () => {
+        setIsCreateChatModalOpen(true);
+    }
+
+    const handleCloseCreateChatModal = () => {
+        setIsCreateChatModalOpen(false);
+    }
+
+    const handleOpenChatRoom = (chatroomId: number) => {
+        setActiveChatRoomId(chatroomId);
+    }
+
+    const handleCloseComponent = () => {
+        setActiveChatRoomId(null);
+    }
+
     const handleOpenChat = () => {
         navigate("/chat");
     }
 
-    const filteredFeeds: (Feed | Reel)[] = feedType === 'posts' ? feeds : reels;
-
     return (
-        <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
+        <div className='main-container w-full h-screen bg-[rgba(0,0,0,0)] relative mx-auto my-0'>
             <div className="layout-container flex h-full grow flex-col min-h-screen">
                 <div className="relative flex h-full min-h-screen">
                     <div className="relative">
@@ -216,84 +178,56 @@ const UserPage: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
-                    </div>
-                    <div className='flex-1 py-2'>
-                        <div className='flex flex-col items-center md:flex-row md:items-start ml-2'>
-                            <div className='w-32 h-32 rounded-full overflow-hidden mr-4 mb-4 md:mb-0'>
-                                <img
-                                    src={getFullImageUrl(user.profile_picture)}
-                                    alt={`${user.username}'s profile`}
-                                    className='w-full h-full object-cover'
-                                />
-                            </div>
-                            <div>
-                                <h1 className='text-3xl font-bold'>{user.username}</h1>
-                                <p className='text-1xl font-bold py-2'>{user.name}</p>
-                                <div className='flex mt-4'>
-                                    <div className='flex-2'>
-                                        <span className='block text-center'>
-                                            <span className='text-gray-600'>게시물</span>
-                                            <span className='text-1xl font-bold px-1'>{user.posts_count}</span>
-                                        </span>
-                                    </div>
-                                    <div className='flex-2'>
-                                        <span className='block text-center'>
-                                            <span className='text-gray-600'>팔로워</span>
-                                            <span className='text-1xl font-bold px-1'>{user.followers_count}</span>
-                                        </span>
-                                    </div>
-                                    <div className='flex-2'>
-                                        <span className='block text-center'>
-                                            <span className='text-gray-600'>팔로우</span>
-                                            <span className='text-1xl font-bold px-1'>{user.following_count}</span>
-                                        </span>
+                                <div className='w-[300px] h-full bg-[rgba(0,0,0,0)] absolute bottom-0 left-[220px] z-[139] border-r border-gray-300 z-10'>
+                                    <div className="flex flex-col items-center gap-3 px-3 py-2">
+                                        <div className='w-[238px] h-[50px] bg-[rgba(0,0,0,0)] relative z-[164] mt-0 mr-0 mb-0 ml-0'>
+                                            <span className="flex justify-start items-center font-['Inter'] text-[20px] font-semibold leading-[25.415px] text-[#1f1f1f] absolute bottom-[5px] text-left whitespace-nowrap z-[165]">
+                                                {currentUser.username}
+                                            </span>
+                                        </div>
+                                        <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5">
+                                            {chatRooms.length > 0 ? (
+                                                chatRooms.map(chatRoom => (
+                                                    <div key={chatRoom.chatroom_id} className="flex items-center gap-3 px-3 py-2 cursor-pointer hover:bg-gray-200" onClick={() => handleOpenChatRoom(chatRoom.chatroom_id)}>
+                                                        <div
+                                                            className="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10"
+                                                            style={{ backgroundImage: `url(${getFullImageUrl(chatRoom.user.profile_picture)})` }}
+                                                        ></div>
+                                                        <div>
+                                                            <p className="text-sm font-medium">{chatRoom.user.username}</p>
+                                                        </div>
+                                                    </div>
+                                                ))
+                                            ) : (
+                                                <div className="flex flex-col items-center justify-center h-full">
+                                                    <div className="flex flex-col items-center">
+                                                        <div className="border-4 border-black rounded-full p-4 mb-4">
+                                                            <img src="https://i.ibb.co/WcxN6vm/chat-icon.png" alt="No messages" className="w-16 h-16" />
+                                                        </div>
+                                                        <p className="text-xl font-bold mb-2">내 메시지</p>
+                                                        <p className="text-gray-500 mb-4">친구에게 메시지를 보내 보세요</p>
+                                                        <button className="px-4 py-2 bg-blue-500 text-white rounded-md" onClick={handleOpenCreateChatModal}>메시지 보내기</button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <p className='text-gray-600 mt-4'>{user.bio}</p>
-                                <a href={user.website} target="_blank" rel="noopener noreferrer" className='text-blue-500'>{user.website}</a>
-                            </div>
-                        </div>
-                        <div className='mt-6'>
-                            <div className='flex justify-center border-b border-gray-300 mb-4'>
-                                <button className={`mx-2 px-4 py-2 flex items-center ${feedType === 'posts' ? 'border-b-2 border-black' : ''}`} onClick={() => setFeedType('posts')}>
-                                    <img src="https://i.ibb.co/BG5fQTK/feeds-icon.png" alt="feeds icon" className='w-4 h-4 mr-2' />
-                                    게시물
-                                </button>
-                                <button className={`mx-2 px-4 py-2 flex items-center ${feedType === 'reels' ? 'border-b-2 border-black' : ''}`} onClick={() => setFeedType('reels')}>
-                                    <svg className='w-4 h-4 mr-2' fill='currentColor' viewBox='0 0 256 256'><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path></svg>
-                                    릴스
-                                </button>
-                            </div>
-                            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                                {filteredFeeds.map(feed => (
-                                    <div key={feed.id} className='border rounded-lg overflow-hidden'>
-                                        {feedType === 'posts' && 'images' in feed && feed.images.length > 0 && (
-                                            <img
-                                                src={getFullImageUrl(feed.images[0].file)}
-                                                alt="Post image"
-                                                className='w-full h-64 object-cover'
-                                            />
-                                        )}
-                                        {feedType === 'reels' && 'videos' in feed && feed.videos.length > 0 && (
-                                            <video
-                                                src={getFullImageUrl(feed.videos[0].file)}
-                                                className='w-full h-64 object-cover'
-                                                controls
-                                            />
-                                        )}
-                                    </div>
-                                ))}
+                                <div className='absolute top-0 left-[540px] w-[720px] h-full bg-[#fefefe]'>
+                                    {activeChatRoomId && currentUser && (
+                                        <ChatRoom chatroomId={Number(activeChatRoomId)} currentUser={currentUser} onClose={handleCloseComponent} />
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
                     {isCreateFeedOpen && <CreateFeed onClose={handleCloseCreateFeed} />}
+                    {isCreateChatModalOpen && <CreateChatModal onClose={handleCloseCreateChatModal} />}
                 </div>
             </div>
         </div>
     );
 };
 
-export default UserPage;
+export default ChatList;

@@ -69,6 +69,10 @@ const Settings: React.FC = () => {
         setActiveComponent(null);
     }
 
+    const handleOpenChat = () => {
+        navigate("/chat");
+    }
+
     return (
         <div className='main-container w-full h-screen bg-[rgba(0,0,0,0)] relative mx-auto my-0'>
             <div className="layout-content-container flex flex-col w-60 border-r border-gray-300 h-full z-10">
@@ -77,11 +81,7 @@ const Settings: React.FC = () => {
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
                                 <div className="text-[#111418]" data-icon="House" data-size="24px" data-weight="fill">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                        <path
-                                            d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
-                                        ></path>
-                                    </svg>
+                                    <img className="w-6 h-6" src="https://i.ibb.co/2WZXyjX/icon-rubber-duck.png" alt="chat" />
                                 </div>
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Origram</p>
                             </div>
@@ -113,15 +113,9 @@ const Settings: React.FC = () => {
                                 </div>
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Reels</p>
                             </div>
-                            <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
-                                <div className="text-[#111418]" data-icon="ShoppingBag" data-size="24px" data-weight="regular">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                        <path
-                                            d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
-                                        ></path>
-                                    </svg>
-                                </div>
-                                <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Shop</p>
+                            <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenChat}>
+                                <img className="w-6 h-6" src="https://i.ibb.co/WcxN6vm/chat-icon.png" alt="chat" />
+                                <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Chat</p>
                             </div>
                             <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenProfile}>
                                 {currentUser ? (

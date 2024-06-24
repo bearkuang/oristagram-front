@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import CreateFeed from '../feed/CreateFeed';
 import CommentPop from '../feed/CommentPop';
 import Sidebar from '../feed/Siderbar';
+import FollowModal from './FollowModal';
+import FollowerModal from './FollowerModal';
 
 interface User {
   id: number;
@@ -42,7 +44,7 @@ interface Feed extends Post {
   comment_count: number;
   is_liked: boolean;
   is_saved: boolean;
-  videos?: Video[]; // Optional videos property
+  videos?: Video[];
 }
 
 const ProfilePage: React.FC = () => {
@@ -57,6 +59,8 @@ const ProfilePage: React.FC = () => {
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [feedType, setFeedType] = useState<'posts' | 'saved'>('posts');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isFollowModalOpen, setIsFollowModalOpen] = useState(false);
+  const [isFollowerModalOpen, setIsFollowerModalOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -140,37 +144,51 @@ const ProfilePage: React.FC = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleOpenFollowModal = () => {
+    setIsFollowModalOpen(true);
+  };
+
+  const handleCloseFollowModal = () => {
+    setIsFollowModalOpen(false);
+  };
+
+  const handleOpenFollowerModal = () => {
+    setIsFollowerModalOpen(true);
+  };
+
+  const handleCloseFollowerModal = () => {
+    setIsFollowerModalOpen(false);
+  };
+
   const handleEditProfile = () => {
     navigate("/settings");
   };
+
+  const handleOpenChat = () => {
+    navigate("/chat");
+  }
 
   const filteredFeeds = feedType === 'posts' ? [...posts, ...reels] : [...savedPosts, ...savedReels];
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
-      <div className="layout-container flex h-full grow flex-col">
-        <div className="relative flex justify-between">
+      <div className="layout-container flex h-full grow flex-col min-h-screen">
+        <div className="relative flex h-full min-h-screen">
           <div className="relative">
-            <div className="layout-content-container flex flex-col w-60 border-r border-gray-300">
-              <div className="flex h-full min-h-[700px] flex-col justify-between bg-white p-4">
+            <div className="layout-content-container flex flex-col w-60 border-r border-gray-300 h-full min-h-full">
+              <div className="flex h-full min-h-full flex-col justify-between bg-white p-4">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
                       <div className="text-[#111418]" data-icon="House" data-size="24px" data-weight="fill">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                          <path
-                            d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
-                          ></path>
-                        </svg>
+                        <img className="w-6 h-6" src="https://i.ibb.co/2WZXyjX/icon-rubber-duck.png" alt="chat" />
                       </div>
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Origram</p>
                     </div>
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleSidebarToggle}>
                       <div className="text-[#111418]" data-icon="Compass" data-size="24px" data-weight="regular">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                          <path
-                            d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z"
-                          ></path>
+                          <path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z"></path>
                         </svg>
                       </div>
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Explore</p>
@@ -193,15 +211,9 @@ const ProfilePage: React.FC = () => {
                       </div>
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Reels</p>
                     </div>
-                    <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
-                      <div className="text-[#111418]" data-icon="ShoppingBag" data-size="24px" data-weight="regular">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                          <path
-                            d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
-                          ></path>
-                        </svg>
-                      </div>
-                      <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Shop</p>
+                    <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenChat}>
+                      <img className="w-6 h-6" src="https://i.ibb.co/WcxN6vm/chat-icon.png" alt="chat" />
+                      <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Chat</p>
                     </div>
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenProfile}>
                       {currentUser ? (
@@ -251,13 +263,13 @@ const ProfilePage: React.FC = () => {
                     </span>
                   </div>
                   <div className='flex-2'>
-                    <span className='block text-center'>
+                    <span className='block text-center cursor-pointer' onClick={handleOpenFollowerModal}>
                       <span className='text-gray-600'>팔로워</span>
                       <span className='text-1xl font-bold px-1'>{user.followers_count}</span>
                     </span>
                   </div>
                   <div className='flex-2'>
-                    <span className='block text-center'>
+                    <span className='block text-center cursor-pointer' onClick={handleOpenFollowModal}>
                       <span className='text-gray-600'>팔로우</span>
                       <span className='text-1xl font-bold px-1'>{user.following_count}</span>
                     </span>
@@ -306,6 +318,8 @@ const ProfilePage: React.FC = () => {
             <CommentPop feed={selectedFeed} onClose={handleCloseCommentPop} />
           )}
           {isCreateFeedOpen && <CreateFeed onClose={handleCloseCreateFeed} />}
+          {isFollowModalOpen && <FollowModal onClose={handleCloseFollowModal} />}
+          {isFollowerModalOpen && <FollowerModal onClose={handleCloseFollowerModal} />}
         </div>
       </div>
     </div>
