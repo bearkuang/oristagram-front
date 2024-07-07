@@ -23,7 +23,7 @@ const SettingProfilePage: React.FC = () => {
 
             await axios.post('http://localhost:8000/api/auth/register/', formData);
 
-            navigate('/login');
+            navigate('/');
         } catch (error) {
             console.error('Error during registration:', error);
             setLoading(false);
@@ -31,7 +31,7 @@ const SettingProfilePage: React.FC = () => {
     };
 
     const handleToLogin = () => {
-        navigate('/login');
+        navigate('/');
     }
 
     return (

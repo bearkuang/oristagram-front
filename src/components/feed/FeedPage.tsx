@@ -22,6 +22,7 @@ interface Feed {
   author: User;
   content: string;
   images: Image[];
+  site: string;
   created_at: string;
   like_count: number;
   comment_count: number;
@@ -249,8 +250,8 @@ const FeedPage: React.FC = () => {
       <div className="layout-container flex h-full grow flex-col min-h-screen">
         <div className="flex justify-between flex h-full min-h-screen">
           <div className="relative">
-            <div className="layout-content-container flex flex-col w-60 border-r border-gray-300 h-full">
-              <div className="flex h-full min-h-[700px] flex-col justify-between bg-white p-4">
+            <div className="fixed top-0 left-0 layout-content-container flex flex-col w-60 border-r border-gray-300 h-full">
+              <div className="flex flex-col h-full justify-between p-4">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
@@ -295,7 +296,13 @@ const FeedPage: React.FC = () => {
                       {currentUser ? (
                         <div
                           className="bg-center bg-no-repeat bg-cover rounded-full h-6 w-6"
-                          style={{ backgroundImage: `url(${getFullImageUrl(currentUser.profile_picture)})`, height: '24px', width: '24px' }}
+                          style={{
+                            backgroundImage: `url(${currentUser.profile_picture
+                              ? getFullImageUrl(currentUser.profile_picture)
+                              : '/image/default_profile_image.png'})`,
+                            height: '24px',
+                            width: '24px'
+                          }}
                         ></div>
                       ) : (
                         <div className="text-[#111418]" data-icon="User" data-size="24px" data-weight="regular">
@@ -308,13 +315,26 @@ const FeedPage: React.FC = () => {
                       )}
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Profile</p>
                     </div>
+                    <div className="mt-auto pt-4">
+                      <div
+                        className="flex items-center gap-3 px-3 py-2 cursor-pointer"
+                        onClick={() => navigate('/settings')}
+                      >
+                        <div className="text-[#111418]" data-icon="Gear" data-size="24px" data-weight="regular">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.49A107.71,107.71,0,0,0,73.89,34.49a8,8,0,0,0-3.94,6L67.21,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.93,107.21,107.21,0,0,0-10.88,26.25,8,8,0,0,0,1.48,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.71,107.71,0,0,0,26.25-10.87,8,8,0,0,0,3.94-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.93,107.21,107.21,0,0,0,10.88-26.25,8,8,0,0,0-1.48-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path>
+                          </svg>
+                        </div>
+                        <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">설정</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
             <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
           </div>
-          <div className="gap-1 px-6 flex flex-1 justify-center py-5">
+          <div className="gap-1 px-6 flex flex-1 justify-center py-5 ml-60 p-4">
             <div className="layout-content-container flex flex-col max-w-[960px] ml-5 flex-1">
               {followedUsers.length > 0 && (
                 <div className="flex gap-4 overflow-x-auto py-4">
@@ -374,6 +394,13 @@ const FeedPage: React.FC = () => {
                         className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
                         style={{ backgroundImage: `url(${getFullImageUrl(feed.images[currentImageIndexes[feed.id] || 0]?.file || '')})` }}
                       ></div>
+                    </div>
+                  </div>
+                  <div className="relative flex w-full grow bg-white @container">
+                    <div className="w-full gap-4">
+                      <div className='flex items-center w-full bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded'>
+                        <a href={feed.site} target="_blank" rel="noopener noreferrer" className='text-white px-2'>상품 보러 가기</a>
+                      </div>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-4 px-4 py-2 py-2 justify-between">
@@ -468,8 +495,12 @@ const FeedPage: React.FC = () => {
                 {currentUser && (
                   <div className="flex items-center gap-3 px-3 py-2">
                     <div
-                      className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14"
-                      style={{ backgroundImage: `url(${getFullImageUrl(currentUser.profile_picture)})` }}
+                      className="bg-center bg-no-repeat bg-cover rounded-full h-14 w-14"
+                      style={{
+                        backgroundImage: `url(${currentUser.profile_picture
+                          ? getFullImageUrl(currentUser.profile_picture)
+                          : '/image/default_profile_image.png'})`,
+                      }}
                     ></div>
                     <div className="flex flex-col justify-center">
                       <p className="text-[#111418] text-base font-medium leading-normal line-clamp-1">{currentUser.username}</p>

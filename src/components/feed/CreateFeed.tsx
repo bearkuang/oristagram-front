@@ -16,6 +16,7 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [content, setContent] = useState('');
+  const [site, setSite] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -149,6 +150,13 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
+            <input
+                type="text"
+                placeholder="쇼핑몰 연결하기..."
+                className="flex-1 p-2 rounded-lg h-10 py-2 mr-2"
+                value={site}
+                onChange={(e) => setSite(e.target.value)}
+              />
           </div>
         </div>
       </div>

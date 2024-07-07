@@ -175,8 +175,8 @@ const ProfilePage: React.FC = () => {
       <div className="layout-container flex h-full grow flex-col min-h-screen">
         <div className="relative flex h-full min-h-screen">
           <div className="relative">
-            <div className="layout-content-container flex flex-col w-60 border-r border-gray-300 h-full min-h-full">
-              <div className="flex h-full min-h-full flex-col justify-between bg-white p-4">
+            <div className="fixed top-0 left-0 w-60 h-full border-r border-gray-300 bg-white overflow-y-auto">
+              <div className="flex flex-col h-full justify-between p-4">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
@@ -232,6 +232,19 @@ const ProfilePage: React.FC = () => {
                       )}
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Profile</p>
                     </div>
+                    <div className="mt-auto pt-4">
+                      <div
+                        className="flex items-center gap-3 px-3 py-2 cursor-pointer"
+                        onClick={() => navigate('/settings')}
+                      >
+                        <div className="text-[#111418]" data-icon="Gear" data-size="24px" data-weight="regular">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                            <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.49A107.71,107.71,0,0,0,73.89,34.49a8,8,0,0,0-3.94,6L67.21,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.93,107.21,107.21,0,0,0-10.88,26.25,8,8,0,0,0,1.48,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.71,107.71,0,0,0,26.25-10.87,8,8,0,0,0,3.94-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.93,107.21,107.21,0,0,0,10.88-26.25,8,8,0,0,0-1.48-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path>
+                          </svg>
+                        </div>
+                        <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">설정</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -241,11 +254,16 @@ const ProfilePage: React.FC = () => {
           <div className='flex-1 py-2'>
             <div className='flex flex-col items-center md:flex-row md:items-start ml-2'>
               <div className='w-32 h-32 rounded-full overflow-hidden mr-4 mb-4 md:mb-0'>
-                <img
-                  src={getFullImageUrl(user.profile_picture)}
-                  alt={`${user.username}'s profile`}
-                  className='w-full h-full object-cover'
-                />
+                {currentUser && (
+                  <div
+                    className="bg-center bg-no-repeat bg-cover rounded-full w-full h-full object-cover"
+                    style={{
+                      backgroundImage: `url(${currentUser.profile_picture
+                        ? getFullImageUrl(currentUser.profile_picture)
+                        : '/image/default_profile_image.png'})`,
+                    }}
+                  ></div>
+                )}
               </div>
               <div>
                 <div className='flex items-center'>

@@ -5,6 +5,7 @@ import { getFullImageUrl } from '../../services/utils';
 import { useNavigate } from "react-router-dom";
 import Sidebar from '../feed/Siderbar';
 import EditProfile from './EditProfile';
+import AccountStatus from './AccountStatus';
 
 interface User {
     id: number;
@@ -14,13 +15,14 @@ interface User {
     website: string;
     bio: string;
     birth_date: string;
+    is_active: boolean;
 }
 
 const Settings: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
-    const [activeComponent, setActiveComponent] = useState<'editProfile' | null>(null);
+    const [activeComponent, setActiveComponent] = useState<'editProfile' | 'accountStatus' | null>(null);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -32,7 +34,10 @@ const Settings: React.FC = () => {
                         Authorization: `Bearer ${token}`
                     }
                 });
-                setCurrentUser(response.data);
+                setCurrentUser({
+                    ...response.data,
+                    is_active: response.data.is_active === true || response.data.is_active === 'true'
+                });
             } catch (error) {
                 console.error('Error fetching current user:', error);
             }
@@ -71,6 +76,10 @@ const Settings: React.FC = () => {
 
     const handleOpenChat = () => {
         navigate("/chat");
+    }
+
+    const handelOpenAccountStatus = () => {
+        setActiveComponent("accountStatus");
     }
 
     return (
@@ -134,6 +143,19 @@ const Settings: React.FC = () => {
                                 )}
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Profile</p>
                             </div>
+                            <div className="mt-auto pt-4">
+                                <div
+                                    className="flex items-center gap-3 px-3 py-2 cursor-pointer"
+                                    onClick={() => navigate('/settings')}
+                                >
+                                    <div className="text-[#111418]" data-icon="Gear" data-size="24px" data-weight="regular">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                            <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.49A107.71,107.71,0,0,0,73.89,34.49a8,8,0,0,0-3.94,6L67.21,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.93,107.21,107.21,0,0,0-10.88,26.25,8,8,0,0,0,1.48,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.71,107.71,0,0,0,26.25-10.87,8,8,0,0,0,3.94-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.93,107.21,107.21,0,0,0,10.88-26.25,8,8,0,0,0-1.48-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path>
+                                        </svg>
+                                    </div>
+                                    <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">설정</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -147,14 +169,29 @@ const Settings: React.FC = () => {
                         </span>
                     </div>
                     <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={handleOpenEditProfile}>
-                        <img src="https://i.ibb.co/94gx1h9/profile-edit.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
+                        <img src="https://i.ibb.co/gm1bXVY/ori-profile-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
                         <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">프로필 편집</span>
+                    </div>
+                    <div className='w-[238px] h-[50px] bg-[rgba(0,0,0,0)] relative z-[164] mt-0 mr-0 mb-0 ml-0'>
+                        <span className="flex justify-start items-center font-['Inter'] text-[12px] font-semibold leading-[25.415px] text-[#1f1f1f] absolute bottom-[5px] right-[135px] text-left whitespace-nowrap z-[165]">
+                            계정 정보 및 지원
+                        </span>
+                    </div>
+                    <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={handelOpenAccountStatus}>
+                        <img src="https://i.ibb.co/wrpLsTJ/ori-people-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
+                        <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">계정 상태</span>
                     </div>
                 </div>
             </div>
             <div className='absolute top-0 left-[540px] w-[720px] h-full bg-[#fefefe]'>
                 {activeComponent === 'editProfile' && currentUser && (
                     <EditProfile currentUser={currentUser} onClose={handleCloseComponent} />
+                )}
+                {activeComponent === 'accountStatus' && currentUser && (
+                    <AccountStatus
+                        currentUser={currentUser}
+                        onClose={handleCloseComponent}
+                    />
                 )}
             </div>
             {isCreateFeedOpen && <CreateFeed onClose={handleCloseCreateFeed} />}

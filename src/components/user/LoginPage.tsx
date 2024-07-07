@@ -1,27 +1,38 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../../services/api';
+import DeactivatedAccountModal from './DeactivateAccountModal';
 
 
 const LoginPage: React.FC = () => {
   const [usernameOrEmail, setUsernameOrEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();  // useNavigate 훅을 사용합니다.
+  const [showModal, setShowModal] = useState(false);
+  const [tempToken, setTempToken] = useState('');
+  const navigate = useNavigate();
 
   const handleLogin = async () => {
     try {
       const response = await login(usernameOrEmail, password);
       console.log('Login successful:', response);
 
-      // Save the token to localStorage
-      localStorage.setItem('accessToken', response.access);
-      localStorage.setItem('refreshToken', response.refresh);
-
-      navigate('/feed');
+      if (response.is_active) {
+        localStorage.setItem('accessToken', response.access);
+        localStorage.setItem('refreshToken', response.refresh);
+        navigate('/feed');
+      } else {
+        // 비활성화된 계정
+        setTempToken(response.temp_token);
+        setShowModal(true);
+      }
     } catch (error) {
       console.error('Login error:', error);
     }
   };
+
+  const handleToJoin = () => {
+    navigate("/join");
+  }
 
   return (
     <div className="relative flex size-full min-h-screen flex-col bg-white overflow-x-hidden">
@@ -75,9 +86,26 @@ const LoginPage: React.FC = () => {
               </button>
             </div>
             <p className="text-[#637588] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center underline">Forgot password?</p>
+            <div className="bg-white p-4 shadow rounded-lg mt-4">
+              <p className="text-center text-sm">
+                계정이 없으신가요?
+                <button
+                  onClick={handleToJoin}
+                  className="ml-1 text-blue-500 font-semibold hover:text-blue-700 focus:outline-none focus:underline"
+                >
+                  가입하기
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>
+      {showModal && (
+        <DeactivatedAccountModal
+          tempToken={tempToken}
+          onClose={() => setShowModal(false)}
+        />
+      )}
     </div>
   );
 };

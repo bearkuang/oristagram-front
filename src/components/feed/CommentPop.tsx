@@ -6,8 +6,10 @@ interface CommentPopProps {
   onClose: () => void;
 }
 
-const getFullImageUrl = (url: string) => {
-  if (!url) return '';
+const getFullImageUrl = (url: string | null) => {
+  if (!url) {
+    return '/image/default_profile_image.png';
+  }
   if (url.startsWith('/media/')) {
     return `http://localhost:8000${url}`;
   }

@@ -19,6 +19,7 @@ const App: React.FC = () => {
             <Router>
                 <Routes>
                     <Route path="/" element={<LoginPage />} />
+                    <Route path="/join" element={<JoinPage />} />
                     <Route path="/feed" element={<FeedPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="/tagged/:tag" element={<TaggedPage />} />
