@@ -29,7 +29,7 @@ const Settings: React.FC = () => {
         const fetchCurrentUser = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get('http://localhost:8000/api/users/me/', {
+                const response = await axios.get('/api/users/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

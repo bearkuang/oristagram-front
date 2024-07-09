@@ -39,7 +39,7 @@ const ChatList: React.FC = () => {
                     navigate("/login");
                     return;
                 }
-                const response = await axios.get('http://localhost:8000/api/users/me/', {
+                const response = await axios.get('/api/users/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -57,7 +57,7 @@ const ChatList: React.FC = () => {
                     navigate("/login");
                     return;
                 }
-                const response = await axios.get('http://localhost:8000/api/chatrooms/my_chatrooms/', {
+                const response = await axios.get('/api/chatrooms/my_chatrooms/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }

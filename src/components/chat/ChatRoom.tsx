@@ -32,7 +32,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatroomId, currentUser, onClose })
         const fetchMessages = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/chatrooms/${chatroomId}/messages/`, {
+                const response = await axios.get(`/api/chatrooms/${chatroomId}/messages/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -46,7 +46,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatroomId, currentUser, onClose })
         const fetchChatPartner = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/chatrooms/${chatroomId}/`, {
+                const response = await axios.get(`/api/chatrooms/${chatroomId}/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -92,7 +92,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatroomId, currentUser, onClose })
         try {
             const token = localStorage.getItem('accessToken');
             const response = await axios.post(
-                `http://localhost:8000/api/chatrooms/${chatroomId}/send_message/`,
+                `/api/chatrooms/${chatroomId}/send_message/`,
                 {
                     content: messageContent,
                     receiver_id: chatPartner?.id

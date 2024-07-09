@@ -56,7 +56,7 @@ const TaggedPage: React.FC = () => {
                     return;
                 }
                 console.log(`Fetching posts tagged with ${tag}...`);
-                const response = await axios.get(`http://localhost:8000/api/search/tagged/?tag=${tag}`, {
+                const response = await axios.get(`/api/search/tagged/?tag=${tag}`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -80,7 +80,7 @@ const TaggedPage: React.FC = () => {
                 return;
               }
               console.log('Fetching current user...');
-              const response = await axios.get('http://localhost:8000/api/users/me/', {
+              const response = await axios.get('/api/users/me/', {
                 headers: {
                   Authorization: `Bearer ${token}`
                 }

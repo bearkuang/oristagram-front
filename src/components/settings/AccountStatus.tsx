@@ -26,7 +26,7 @@ const AccountStatus: React.FC<AccountStatusProps> = ({ currentUser, onClose }) =
         try {
             const token = localStorage.getItem('accessToken');
             const endpoint = currentUser.is_active ? 'deactivate' : 'reactivate_account';
-            await axios.post(`http://localhost:8000/api/users/${endpoint}/`, {}, {
+            await axios.post(`/api/users/${endpoint}/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             alert(currentUser.is_active ? '계정이 비활성화되었습니다.' : '계정이 재활성화되었습니다.');

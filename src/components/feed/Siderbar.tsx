@@ -33,14 +33,14 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             if (searchTerm.startsWith('#')) {
                 const query = searchTerm.slice(1);
                 try {
-                    const response = await axios.get(`http://localhost:8000/api/search/tags/?q=${query}`, config);
+                    const response = await axios.get(`/api/search/tags/?q=${query}`, config);
                     setSearchResults({ tags: response.data, users: [] });
                 } catch (error) {
                     console.error('Error fetching tags:', error);
                 }
             } else {
                 try {
-                    const response = await axios.get(`http://localhost:8000/api/search/usernames/?q=${searchTerm}`, config);
+                    const response = await axios.get(`/api/search/usernames/?q=${searchTerm}`, config);
                     setSearchResults({ tags: [], users: response.data });
                 } catch (error) {
                     console.error('Error fetching users:', error);

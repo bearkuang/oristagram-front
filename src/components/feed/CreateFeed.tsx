@@ -17,10 +17,20 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [content, setContent] = useState('');
   const [site, setSite] = useState('');
+  const [isSiteChecked, setIsSiteChecked] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setSelectedFiles(Array.from(e.target.files));
+    }
+  };
+
+  const handleSiteCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsSiteChecked(e.target.checked);
+    if (e.target.checked) {
+      setSite("http://oridori.shop/category");
+    } else {
+      setSite("");
     }
   };
 
@@ -33,7 +43,7 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
         formData.append('files', file);
       });
 
-      const response = await axios.post('http://localhost:8000/api/posts/', formData, {
+      const response = await axios.post('/api/posts/', formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'multipart/form-data',
@@ -52,7 +62,7 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:8000/api/users/me/', {
+        const response = await axios.get('/api/users/me/', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -150,13 +160,18 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
               value={content}
               onChange={(e) => setContent(e.target.value)}
             />
-            <input
-                type="text"
-                placeholder="쇼핑몰 연결하기..."
-                className="flex-1 p-2 rounded-lg h-10 py-2 mr-2"
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
+            <div className="p-4 flex items-center">
+              <input
+                type="checkbox"
+                id="siteCheckbox"
+                checked={isSiteChecked}
+                onChange={handleSiteCheckboxChange}
+                className="mr-2"
               />
+              <label htmlFor="siteCheckbox" className="text-sm text-gray-700">
+                오리도리 쇼핑몰 연결하기
+              </label>
+            </div>
           </div>
         </div>
       </div>

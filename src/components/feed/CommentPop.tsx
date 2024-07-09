@@ -28,7 +28,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
     const fetchComments = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://localhost:8000/api/posts/${currentFeed.id}/comments/`, {
+        const response = await axios.get(`/api/posts/${currentFeed.id}/comments/`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -51,7 +51,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
         data.parent_id = parentCommentId;
       }
 
-      const response = await axios.post(`http://localhost:8000/api/posts/${currentFeed.id}/comment/`, data, {
+      const response = await axios.post(`/api/posts/${currentFeed.id}/comment/`, data, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -70,7 +70,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const handleLike = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/like/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/like/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -86,7 +86,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const handleUnlike = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unlike/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/unlike/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -102,7 +102,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const handleSave = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/mark/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/mark/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -118,7 +118,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const handleUnsave = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unmark/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/unmark/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -150,7 +150,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
     if (!repliesVisibility[commentId]) {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://localhost:8000/api/comments/${commentId}/replies/`, {
+        const response = await axios.get(`/api/comments/${commentId}/replies/`, {
           headers: {
             Authorization: `Bearer ${token}`
           }

@@ -29,7 +29,7 @@ const CommentBubble: React.FC<CommentBubbleProps> = ({ reelsId, onClose }) => {
         const fetchComments = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/reels/${reelsId}/comments/`, {
+                const response = await axios.get(`/api/reels/${reelsId}/comments/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -43,7 +43,7 @@ const CommentBubble: React.FC<CommentBubbleProps> = ({ reelsId, onClose }) => {
         const fetchCurrentUser = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get('http://localhost:8000/api/users/me/', {
+                const response = await axios.get('/api/users/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -63,7 +63,7 @@ const CommentBubble: React.FC<CommentBubbleProps> = ({ reelsId, onClose }) => {
 
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await axios.post(`http://localhost:8000/api/reels/${reelsId}/comment/`, {
+            const response = await axios.post(`/api/reels/${reelsId}/comment/`, {
                 text: commentText
             }, {
                 headers: {

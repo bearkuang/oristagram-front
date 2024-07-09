@@ -74,7 +74,7 @@ const ProfilePage: React.FC = () => {
           return;
         }
         console.log('Fetching profile...');
-        const response = await axios.get('http://localhost:8000/api/users/profile/', {
+        const response = await axios.get('/api/users/profile/', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -99,7 +99,7 @@ const ProfilePage: React.FC = () => {
           return;
         }
         console.log('Fetching current user...');
-        const response = await axios.get('http://localhost:8000/api/users/me/', {
+        const response = await axios.get('/api/users/me/', {
           headers: {
             Authorization: `Bearer ${token}`
           }

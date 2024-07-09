@@ -31,7 +31,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ currentUser, onClose }) => {
         const fetchUserProfile = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/users/${currentUser.id}/`, {
+                const response = await axios.get(`/api/users/${currentUser.id}/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -66,7 +66,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ currentUser, onClose }) => {
             formData.append('profile_picture', selectedFile);
 
             try {
-                await axios.patch(`http://localhost:8000/api/users/${currentUser.id}/`, formData, {
+                await axios.patch(`/api/users/${currentUser.id}/`, formData, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
@@ -85,7 +85,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ currentUser, onClose }) => {
         try {
             const token = localStorage.getItem('accessToken');
 
-            await axios.patch(`http://localhost:8000/api/users/${currentUser.id}/`, {
+            await axios.patch(`/api/users/${currentUser.id}/`, {
                 profile_picture: null
             }, {
                 headers: {
@@ -110,7 +110,7 @@ const EditProfile: React.FC<EditProfileProps> = ({ currentUser, onClose }) => {
             formData.append('website', website);
             formData.append('bio', bio);
 
-            await axios.patch(`http://localhost:8000/api/users/${currentUser.id}/`, formData, {
+            await axios.patch(`/api/users/${currentUser.id}/`, formData, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'

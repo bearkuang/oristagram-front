@@ -44,7 +44,7 @@ const ReelsPage: React.FC = () => {
         const fetchReels = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get('http://localhost:8000/api/reels/top_reels/', {
+                const response = await axios.get('/api/reels/top_reels/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -58,7 +58,7 @@ const ReelsPage: React.FC = () => {
         const fetchCurrentUser = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get('http://localhost:8000/api/users/me/', {
+                const response = await axios.get('/api/users/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -105,7 +105,7 @@ const ReelsPage: React.FC = () => {
     const handleLike = async (reelsId: number) => {
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await axios.post(`http://localhost:8000/api/reels/${reelsId}/like/`, {}, {
+            const response = await axios.post(`/api/reels/${reelsId}/like/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -123,7 +123,7 @@ const ReelsPage: React.FC = () => {
     const handleUnlike = async (reelsId: number) => {
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await axios.post(`http://localhost:8000/api/reels/${reelsId}/unlike/`, {}, {
+            const response = await axios.post(`/api/reels/${reelsId}/unlike/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -141,7 +141,7 @@ const ReelsPage: React.FC = () => {
     const handleSave = async (reelsId: number) => {
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await axios.post(`http://localhost:8000/api/reels/${reelsId}/mark/`, {}, {
+            const response = await axios.post(`/api/reels/${reelsId}/mark/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -159,7 +159,7 @@ const ReelsPage: React.FC = () => {
     const handleUnsave = async (reelsId: number) => {
         try {
             const token = localStorage.getItem('accessToken');
-            const response = await axios.post(`http://localhost:8000/api/reels/${reelsId}/unmark/`, {}, {
+            const response = await axios.post(`/api/reels/${reelsId}/unmark/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

@@ -54,7 +54,7 @@ const FeedPage: React.FC = () => {
   const fetchNewUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.get<NewUser[]>('http://localhost:8000/api/users/new_users/', {
+      const response = await axios.get<NewUser[]>('/api/users/new_users/', {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -68,7 +68,7 @@ const FeedPage: React.FC = () => {
   const fetchFollowedUsers = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:8000/api/users/following/', {
+        const response = await axios.get('/api/users/following/', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -83,7 +83,7 @@ const FeedPage: React.FC = () => {
     const fetchFeeds = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:8000/api/posts/feed/', {
+        const response = await axios.get('/api/posts/feed/', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -99,7 +99,7 @@ const FeedPage: React.FC = () => {
     const fetchCurrentUser = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:8000/api/users/me/', {
+        const response = await axios.get('/api/users/me/', {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -119,7 +119,7 @@ const FeedPage: React.FC = () => {
   const handleLike = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/like/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/like/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -137,7 +137,7 @@ const FeedPage: React.FC = () => {
   const handleUnlike = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unlike/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/unlike/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -155,7 +155,7 @@ const FeedPage: React.FC = () => {
   const handleSave = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/mark/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/mark/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -173,7 +173,7 @@ const FeedPage: React.FC = () => {
   const handleUnsave = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unmark/`, {}, {
+      const response = await axios.post(`/api/posts/${postId}/unmark/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -192,7 +192,7 @@ const FeedPage: React.FC = () => {
     setIsLoading(prev => ({ ...prev, [userId]: true }));
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/follows/${userId}/follow/`, {}, {
+      const response = await axios.post(`/api/follows/${userId}/follow/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -224,7 +224,7 @@ const FeedPage: React.FC = () => {
 
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${feedId}/comment/`, {
+      const response = await axios.post(`/api/posts/${feedId}/comment/`, {
         text: commentText
       }, {
         headers: {

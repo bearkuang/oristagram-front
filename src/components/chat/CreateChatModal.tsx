@@ -29,7 +29,7 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({ onClose }) => {
             };
 
             try {
-                const response = await axios.get(`http://localhost:8000/api/search/usernames/?q=${searchTerm}`, config);
+                const response = await axios.get(`/api/search/usernames/?q=${searchTerm}`, config);
                 setSearchResults({ users: response.data });
             } catch (error) {
                 console.error('Error fetching users:', error);
@@ -57,7 +57,7 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({ onClose }) => {
         };
 
         try {
-            const response = await axios.post('http://localhost:8000/api/chatrooms/create/', { user_id: selectedUser.id }, config);
+            const response = await axios.post('/api/chatrooms/create/', { user_id: selectedUser.id }, config);
             onClose();
         } catch (error) {
             console.error('Error creating chat room:', error);

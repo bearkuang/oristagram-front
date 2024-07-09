@@ -22,7 +22,7 @@ const FollowerModal: React.FC<FollowerModalProps> = ({ onClose }) => {
         const fetchFollowers = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get('http://localhost:8000/api/users/followers/', {
+                const response = await axios.get('/api/users/followers/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -47,7 +47,7 @@ const FollowerModal: React.FC<FollowerModalProps> = ({ onClose }) => {
     const handleUnfollow = async (userId: number) => {
         try {
             const token = localStorage.getItem('accessToken');
-            await axios.post(`http://localhost:8000/api/users/${userId}/unfollow/`, {}, {
+            await axios.post(`/api/users/${userId}/unfollow/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

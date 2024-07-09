@@ -67,7 +67,7 @@ const UserPage: React.FC = () => {
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/users/profile/${userId}/`, {
+                const response = await axios.get(`/api/users/profile/${userId}/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -81,7 +81,7 @@ const UserPage: React.FC = () => {
         const fetchFeeds = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/posts/user/${userId}/`, {
+                const response = await axios.get(`/api/posts/user/${userId}/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -95,7 +95,7 @@ const UserPage: React.FC = () => {
         const fetchReels = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/reels/user/${userId}/`, {
+                const response = await axios.get(`/api/reels/user/${userId}/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -109,7 +109,7 @@ const UserPage: React.FC = () => {
         const fetchCurrentUser = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get('http://localhost:8000/api/users/me/', {
+                const response = await axios.get('/api/users/me/', {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -123,7 +123,7 @@ const UserPage: React.FC = () => {
         const checkFollowStatus = async () => {
             try {
                 const token = localStorage.getItem('accessToken');
-                const response = await axios.get(`http://localhost:8000/api/follows/${userId}/follow_status/`, {
+                const response = await axios.get(`/api/follows/${userId}/follow_status/`, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
@@ -148,7 +148,7 @@ const UserPage: React.FC = () => {
     const handleFollow = async () => {
         try {
             const token = localStorage.getItem('accessToken');
-            await axios.post(`http://localhost:8000/api/users/follow/${userId}/`, {}, {
+            await axios.post(`/api/users/follow/${userId}/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -163,7 +163,7 @@ const UserPage: React.FC = () => {
     const handleUnfollow = async () => {
         try {
             const token = localStorage.getItem('accessToken');
-            await axios.post(`http://localhost:8000/api/users/unfollow/${userId}/`, {}, {
+            await axios.post(`/api/users/unfollow/${userId}/`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

@@ -21,7 +21,7 @@ const SettingProfilePage: React.FC = () => {
             formData.append('website', state.website);
             formData.append('bio', state.bio);
 
-            await axios.post('http://localhost:8000/api/auth/register/', formData);
+            await axios.post('/api/auth/register/', formData);
 
             navigate('/');
         } catch (error) {
