@@ -46,6 +46,12 @@ const Settings: React.FC = () => {
         fetchCurrentUser();
     }, []);
 
+    const logout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/');
+    };
+
     const handleOpenCreateFeed = () => {
         setIsCreateFeedOpen(true);
     };
@@ -161,7 +167,7 @@ const Settings: React.FC = () => {
                 </div>
             </div>
             <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
-            <div className='w-[300px] h-full bg-[rgba(0,0,0,0)] absolute bottom-0 left-[220px] z-[139] border-r border-gray-300 z-10'>
+            <div className='w-[300px] h-full bg-[rgba(0,0,0,0)] absolute bottom-0 left-[220px] z-[139] border-r border-gray-300 z-[10]'>
                 <div className="flex flex-col items-center gap-3 px-3 py-2">
                     <div className='w-[238px] h-[50px] bg-[rgba(0,0,0,0)] relative z-[164] mt-0 mr-0 mb-0 ml-0'>
                         <span className="flex justify-start items-center font-['Inter'] text-[12px] font-semibold leading-[25.415px] text-[#1f1f1f] absolute bottom-[5px] right-[115px] text-left whitespace-nowrap z-[165]">
@@ -180,6 +186,10 @@ const Settings: React.FC = () => {
                     <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={handelOpenAccountStatus}>
                         <img src="https://i.ibb.co/wrpLsTJ/ori-people-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
                         <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">계정 상태</span>
+                    </div>
+                    <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={logout}>
+                        <img src="https://i.ibb.co/TTX0cy2/ori-icon-exit.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
+                        <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">로그아웃</span>
                     </div>
                 </div>
             </div>

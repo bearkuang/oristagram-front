@@ -8,7 +8,7 @@ interface ProfilePictureModalProps {
 
 const ProfilePictureModal: React.FC<ProfilePictureModalProps> = ({ onClose, onFileChange, onResetPicture }) => {
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[1000]">
             <div className="bg-white p-4 rounded-lg shadow-lg w-80 relative z-60">
                 <h2 className="flex justify-center text-lg font-semibold mb-4">프로필 사진 바꾸기</h2>
                 <button

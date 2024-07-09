@@ -19,6 +19,7 @@ interface User {
   followers_count: number;
   following_count: number;
   posts_count: number;
+  is_active: number;
 }
 
 interface Image {
@@ -110,6 +111,8 @@ const ProfilePage: React.FC = () => {
       }
     };
 
+    console.log('User object updated:', user);
+
     fetchProfile();
     fetchCurrentUser();
   }, [navigate]);
@@ -175,8 +178,8 @@ const ProfilePage: React.FC = () => {
       <div className="layout-container flex h-full grow flex-col min-h-screen">
         <div className="relative flex h-full min-h-screen">
           <div className="relative">
-            <div className="fixed top-0 left-0 w-60 h-full border-r border-gray-300 bg-white overflow-y-auto">
-              <div className="flex flex-col h-full justify-between p-4">
+            <div className="layout-content-container flex flex-col w-60 border-r bg-white border-gray-300 h-full min-h-full">
+              <div className="flex h-full min-h-full flex-col justify-between p-4">
                 <div className="flex flex-col gap-4">
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
@@ -258,9 +261,12 @@ const ProfilePage: React.FC = () => {
                   <div
                     className="bg-center bg-no-repeat bg-cover rounded-full w-full h-full object-cover"
                     style={{
-                      backgroundImage: `url(${currentUser.profile_picture
-                        ? getFullImageUrl(currentUser.profile_picture)
-                        : '/image/default_profile_image.png'})`,
+                      backgroundImage: `url(${user.is_active === 0
+                        ? 'https://i.ibb.co/KrwtBKH/ori-icon-security-lock.png'
+                        : currentUser?.profile_picture
+                          ? getFullImageUrl(currentUser.profile_picture)
+                          : '/image/default_profile_image.png'
+                        })`,
                     }}
                   ></div>
                 )}
@@ -310,26 +316,46 @@ const ProfilePage: React.FC = () => {
                   저장됨
                 </button>
               </div>
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                {filteredFeeds.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(feed => (
-                  <div key={feed.id} className='border rounded-lg overflow-hidden' onClick={() => handleOpenCommentPop(feed)}>
-                    {'images' in feed && feed.images.length > 0 && (
-                      <img
-                        src={getFullImageUrl(feed.images[0].file)}
-                        alt="Post image"
-                        className='w-full h-64 object-cover'
-                      />
-                    )}
-                    {'videos' in feed && feed.videos && feed.videos.length > 0 && (
-                      <video
-                        src={getFullImageUrl(feed.videos[0].file)}
-                        className='w-full h-64 object-cover'
-                        controls
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+              {user.is_active === 0 ? (
+                <div className='text-center text-gray-600 text-lg'>
+                  계정이 비활성화되었습니다. 비활성화를 해제해주세요.
+                </div>
+              ) : filteredFeeds.length > 0 ? (
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4 cursor-pointer'>
+                  {filteredFeeds.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(feed => (
+                    <div key={feed.id} className='border rounded-lg overflow-hidden relative' onClick={() => handleOpenCommentPop(feed)}>
+                      {'images' in feed && feed.images.length > 0 && (
+                        <>
+                          <img
+                            src={getFullImageUrl(feed.images[0].file)}
+                            alt="Post image"
+                            className='w-full h-64 object-cover'
+                          />
+                          <div className="absolute top-2 right-2 bg-opacity-50 rounded-full p-1">
+                            <img src="https://i.ibb.co/4V2Mdyc/icon-images.png" alt="Image icon" className="w-6 h-6" />
+                          </div>
+                        </>
+                      )}
+                      {'videos' in feed && feed.videos && feed.videos.length > 0 && (
+                        <>
+                          <video
+                            src={getFullImageUrl(feed.videos[0].file)}
+                            className='w-full h-64 object-cover'
+                            controls
+                          />
+                          <div className="absolute top-2 right-2 bg-opacity-50 rounded-full p-1">
+                            <img src="https://i.ibb.co/bJ04f69/ori-icon-video.png" alt="Video icon" className="w-6 h-6" />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className='text-center text-gray-600 text-lg'>
+                  게시물 없음
+                </div>
+              )}
             </div>
           </div>
           {isCommentPopOpen && selectedFeed && (

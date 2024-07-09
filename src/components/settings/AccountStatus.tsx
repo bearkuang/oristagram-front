@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import DeleteAccountModal from './DeleteAccountModal';
@@ -17,6 +17,10 @@ interface AccountStatusProps {
 const AccountStatus: React.FC<AccountStatusProps> = ({ currentUser, onClose }) => {
     const navigate = useNavigate();
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+    useEffect(() => {
+        console.log(currentUser);
+    })
 
     const handleToggleActivation = async () => {
         try {

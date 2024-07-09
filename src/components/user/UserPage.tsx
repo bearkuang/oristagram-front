@@ -3,6 +3,7 @@ import axios from 'axios';
 import { getFullImageUrl } from '../../services/utils';
 import { useNavigate, useParams } from "react-router-dom";
 import CreateFeed from '../feed/CreateFeed';
+import CommentPop from '../feed/CommentPop';
 import Sidebar from '../feed/Siderbar';
 
 interface User {
@@ -16,6 +17,7 @@ interface User {
     followers_count: number;
     following_count: number;
     posts_count: number;
+    is_active: number;
 }
 
 interface Image {
@@ -28,26 +30,23 @@ interface Video {
     file: string;
 }
 
-interface Post {
+interface CommonFeed {
     id: number;
     content: string;
-    images: Image[];
     created_at: string;
 }
 
-interface Reel {
-    id: number;
-    content: string;
-    videos: Video[];
-    created_at: string;
-}
-
-interface Feed extends Post {
+interface Feed extends CommonFeed {
     author: User;
+    images: Image[];
     like_count: number;
     comment_count: number;
     is_liked: boolean;
     is_saved: boolean;
+}
+
+interface Reel extends CommonFeed {
+    videos: Video[];
 }
 
 const UserPage: React.FC = () => {
@@ -59,6 +58,9 @@ const UserPage: React.FC = () => {
     const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
     const [feedType, setFeedType] = useState<'posts' | 'reels'>('posts');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
+    const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
+    const [isFollowing, setIsFollowing] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -118,15 +120,60 @@ const UserPage: React.FC = () => {
             }
         };
 
+        const checkFollowStatus = async () => {
+            try {
+                const token = localStorage.getItem('accessToken');
+                const response = await axios.get(`http://localhost:8000/api/follows/${userId}/follow_status/`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+                setIsFollowing(response.data.is_following);
+            } catch (error) {
+                console.error('Error checking follow status:', error);
+            }
+        };
+
         fetchUserData();
         fetchFeeds();
         fetchReels();
         fetchCurrentUser();
+        checkFollowStatus();
     }, [navigate, userId]);
 
     if (!user) {
         return <div>Loading...</div>;
     }
+
+    const handleFollow = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            await axios.post(`http://localhost:8000/api/users/follow/${userId}/`, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setIsFollowing(true);
+            setUser(prev => prev ? { ...prev, followers_count: prev.followers_count + 1 } : null);
+        } catch (error) {
+            console.error('Error following user:', error);
+        }
+    };
+
+    const handleUnfollow = async () => {
+        try {
+            const token = localStorage.getItem('accessToken');
+            await axios.post(`http://localhost:8000/api/users/unfollow/${userId}/`, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+            setIsFollowing(false);
+            setUser(prev => prev ? { ...prev, followers_count: prev.followers_count - 1 } : null);
+        } catch (error) {
+            console.error('Error unfollowing user:', error);
+        }
+    };
 
     const handleOpenCreateFeed = () => {
         setIsCreateFeedOpen(true);
@@ -147,6 +194,18 @@ const UserPage: React.FC = () => {
     const handleOpenChat = () => {
         navigate("/chat");
     }
+
+    const handleOpenCommentPop = (feed: Feed | Reel) => {
+        if ('author' in feed) {
+            setSelectedFeed(feed);
+            setIsCommentPopOpen(true);
+        }
+    };
+
+    const handleCloseCommentPop = () => {
+        setIsCommentPopOpen(false);
+        setSelectedFeed(null);
+    };
 
     const filteredFeeds: (Feed | Reel)[] = feedType === 'posts' ? feeds : reels;
 
@@ -214,6 +273,19 @@ const UserPage: React.FC = () => {
                                             )}
                                             <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Profile</p>
                                         </div>
+                                        <div className="mt-auto pt-4">
+                                            <div
+                                                className="flex items-center gap-3 px-3 py-2 cursor-pointer"
+                                                onClick={() => navigate('/settings')}
+                                            >
+                                                <div className="text-[#111418]" data-icon="Gear" data-size="24px" data-weight="regular">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                                        <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.49A107.71,107.71,0,0,0,73.89,34.49a8,8,0,0,0-3.94,6L67.21,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.93,107.21,107.21,0,0,0-10.88,26.25,8,8,0,0,0,1.48,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.71,107.71,0,0,0,26.25-10.87,8,8,0,0,0,3.94-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.93,107.21,107.21,0,0,0,10.88-26.25,8,8,0,0,0-1.48-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path>
+                                                    </svg>
+                                                </div>
+                                                <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">설정</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -230,7 +302,18 @@ const UserPage: React.FC = () => {
                                 />
                             </div>
                             <div>
-                                <h1 className='text-3xl font-bold'>{user.username}</h1>
+                                <div className='flex items-center'>
+                                    <h1 className='text-3xl font-bold'>{user.username}</h1>
+                                    {currentUser && currentUser.id !== user.id && (
+                                        <button
+                                            className={`ml-4 px-4 py-2 rounded-md text-sm font-semibold ${isFollowing ? 'bg-gray-200 text-black' : 'bg-blue-500 text-white'
+                                                }`}
+                                            onClick={isFollowing ? handleUnfollow : handleFollow}
+                                        >
+                                            {isFollowing ? '언팔로우' : '팔로우'}
+                                        </button>
+                                    )}
+                                </div>
                                 <p className='text-1xl font-bold py-2'>{user.name}</p>
                                 <div className='flex mt-4'>
                                     <div className='flex-2'>
@@ -267,28 +350,51 @@ const UserPage: React.FC = () => {
                                     릴스
                                 </button>
                             </div>
-                            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                                {filteredFeeds.map(feed => (
-                                    <div key={feed.id} className='border rounded-lg overflow-hidden'>
-                                        {feedType === 'posts' && 'images' in feed && feed.images.length > 0 && (
-                                            <img
-                                                src={getFullImageUrl(feed.images[0].file)}
-                                                alt="Post image"
-                                                className='w-full h-64 object-cover'
-                                            />
-                                        )}
-                                        {feedType === 'reels' && 'videos' in feed && feed.videos.length > 0 && (
-                                            <video
-                                                src={getFullImageUrl(feed.videos[0].file)}
-                                                className='w-full h-64 object-cover'
-                                                controls
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
+                            {user.is_active === 0 ? (
+                                <div className='text-center text-gray-600 text-lg'>
+                                    계정이 비활성화되었습니다. 비활성화를 해제해주세요.
+                                </div>
+                            ) : filteredFeeds.length > 0 ? (
+                                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                                    {filteredFeeds.map(feed => (
+                                        <div key={feed.id} className='border rounded-lg overflow-hidden relative cursor-pointer' onClick={() => handleOpenCommentPop(feed)}>
+                                            {feedType === 'posts' && 'images' in feed && feed.images.length > 0 && (
+                                                <>
+                                                    <img
+                                                        src={getFullImageUrl(feed.images[0].file)}
+                                                        alt="Post image"
+                                                        className='w-full h-64 object-cover'
+                                                    />
+                                                    <div className="absolute top-2 right-2 bg-opacity-50 rounded-full p-1">
+                                                        <img src="https://i.ibb.co/4V2Mdyc/icon-images.png" alt="Image icon" className="w-6 h-6" />
+                                                    </div>
+                                                </>
+                                            )}
+                                            {feedType === 'reels' && 'videos' in feed && feed.videos.length > 0 && (
+                                                <>
+                                                    <video
+                                                        src={getFullImageUrl(feed.videos[0].file)}
+                                                        className='w-full h-64 object-cover'
+                                                        controls
+                                                    />
+                                                    <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full p-1">
+                                                        <img src="https://i.ibb.co/bJ04f69/ori-icon-video.png" alt="Video icon" className="w-6 h-6" />
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className='text-center text-gray-600 text-lg'>
+                                    게시물 없음
+                                </div>
+                            )}
                         </div>
                     </div>
+                    {isCommentPopOpen && selectedFeed && (
+                        <CommentPop feed={selectedFeed} onClose={handleCloseCommentPop} />
+                    )}
                     {isCreateFeedOpen && <CreateFeed onClose={handleCloseCreateFeed} />}
                 </div>
             </div>

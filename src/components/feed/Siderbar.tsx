@@ -98,8 +98,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                                 {searchResults.users.map((user) => (
                                     <li key={user.id} className="flex items-center py-2 border-b border-gray-300 cursor-pointer" onClick={() => handleUserClick(user.id)}>
                                         <div
-                                            className="bg-center bg-no-repeat bg-cover rounded-full h-6 w-6 mr-2"
-                                            style={{ backgroundImage: `url(${getFullImageUrl(user.profile_picture)})`, height: '32px', width: '32px' }}
+                                            className="bg-center bg-no-repeat bg-cover rounded-full h-8 w-8 mr-2"
+                                            style={{
+                                                backgroundImage: `url(${getFullImageUrl(user.profile_picture) || '/image/default_profile_image.png'})`,
+                                            }}
                                         ></div>
                                         <div>
                                             <p className="font-semibold">{user.username}</p>
