@@ -47,7 +47,7 @@ const SettingProfilePage: React.FC = () => {
                                 onChange={e => dispatch({ type: 'SET_PROFILE_PICTURE', file: e.target.files?.[0] || null })}
                             />
                             <img
-                                src={state.profile_picture ? URL.createObjectURL(state.profile_picture) : "https://i.ibb.co/kxGT5Xd/icon-camera.png"}
+                                src={state.profile_picture ? URL.createObjectURL(state.profile_picture) : "/image/icon-camera.png"}
                                 alt="Profile"
                                 className="h-32 w-32 rounded-full object-cover border-2 border-gray-300"
                             />
@@ -60,7 +60,7 @@ const SettingProfilePage: React.FC = () => {
                     <form className="space-y-6 mt-10" onSubmit={e => e.preventDefault()}>
                         <div>
                             <input
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="웹사이트"
                                 value={state.website}
                                 onChange={e => dispatch({ type: 'SET_FIELD', field: 'website', value: e.target.value })}
@@ -68,7 +68,7 @@ const SettingProfilePage: React.FC = () => {
                         </div>
                         <div>
                             <textarea
-                                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                                className="block w-full rounded-md border-0 py-1.5 px-3 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 placeholder="소개"
                                 value={state.bio}
                                 onChange={e => dispatch({ type: 'SET_FIELD', field: 'bio', value: e.target.value })}

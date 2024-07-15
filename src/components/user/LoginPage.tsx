@@ -41,7 +41,7 @@ const LoginPage: React.FC = () => {
           <div className="w-full lg:w-3/5 lg:block hidden">
             <div
               className="w-full h-full bg-center bg-no-repeat bg-cover rounded-xl min-h-[700px]"
-              style={{ backgroundImage: 'url("https://i.ibb.co/bz8LLtK/login-image.png")' }}
+              style={{ backgroundImage: 'url("/image/login-image.png")' }}
             ></div>
           </div>
           <div className="flex flex-col gap-6 w-full lg:w-2/5 p-8">
