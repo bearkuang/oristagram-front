@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getFullImageUrl } from '../../services/utils';
+import ImageEditModal from './ImageEditModal';
+import { ImageData } from '../../services/types';
 
 interface User {
   id: number;
@@ -13,15 +15,41 @@ interface CreateFeedProps {
 }
 
 const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [step, setStep] = useState<'edit' | 'post'>('edit');
+  const [editedImages, setEditedImages] = useState<ImageData[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [content, setContent] = useState('');
   const [site, setSite] = useState('');
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedFiles(Array.from(e.target.files));
-    }
+  const applyFilterToImage = async (imageData: ImageData): Promise<Blob> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to get canvas context'));
+          return;
+        }
+        ctx.filter = imageData.filter || 'none';
+        console.log(`Applying filter: ${ctx.filter}`);
+        ctx.drawImage(img, 0, 0, img.width, img.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            console.log('Blob created:', blob);
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob from canvas'));
+          }
+        }, 'image/jpeg');
+      };
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = imageData.cropped as string;
+    });
   };
 
   const handleCreatePost = async () => {
@@ -29,8 +57,18 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
       const token = localStorage.getItem('accessToken');
       const formData = new FormData();
       formData.append('content', content);
-      selectedFiles.forEach(file => {
-        formData.append('files', file);
+      formData.append('site', site);
+
+      for (let i = 0; i < editedImages.length; i++) {
+        console.log(`Processing image ${i} with filter ${editedImages[i].filter}`);
+        const filteredBlob = await applyFilterToImage(editedImages[i]);
+        formData.append('files', filteredBlob, `image${i}.jpg`);
+        console.log(`Appended image ${i} to formData`);
+      }
+
+      // Debugging FormData content
+      formData.forEach((value, key) => {
+        console.log(key, value);
       });
 
       const response = await axios.post('http://localhost:8000/api/posts/', formData, {
@@ -41,11 +79,29 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
       });
 
       if (response.status === 201) {
+        console.log('Post created successfully:', response.data);
         onClose();
       }
     } catch (error) {
       console.error('Error creating post:', error);
     }
+  };
+
+  const handleImageEditComplete = (images: ImageData[]) => {
+    setEditedImages(images);
+    setStep('post');
+  };
+
+  const handlePrevImage = () => {
+    setCurrentImageIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : editedImages.length - 1));
+  };
+
+  const handleNextImage = () => {
+    setCurrentImageIndex((prevIndex) => (prevIndex < editedImages.length - 1 ? prevIndex + 1 : 0));
+  };
+
+  const handleImageEditClose = () => {
+    onClose();
   };
 
   useEffect(() => {
@@ -54,8 +110,8 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
         const token = localStorage.getItem('accessToken');
         const response = await axios.get('http://localhost:8000/api/users/me/', {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
         setCurrentUser(response.data);
       } catch (error) {
@@ -65,14 +121,6 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
 
     fetchCurrentUser();
   }, []);
-
-  const handlePrevFile = () => {
-    setSelectedFiles((prevFiles) => [prevFiles[prevFiles.length - 1], ...prevFiles.slice(0, prevFiles.length - 1)]);
-  };
-
-  const handleNextFile = () => {
-    setSelectedFiles((prevFiles) => [...prevFiles.slice(1), prevFiles[0]]);
-  };
 
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
@@ -89,75 +137,63 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
           </button>
         </div>
         <div className="flex flex-1 overflow-hidden">
-          <div className="relative w-[702px] h-full flex items-center justify-center bg-gray-200">
-            {selectedFiles.length > 0 ? (
-              <>
-                {selectedFiles[0].type.startsWith('image/') && (
-                  <img src={URL.createObjectURL(selectedFiles[0])} alt="Selected" className="object-contain h-full" />
+          {step === 'edit' ? (
+            <ImageEditModal onComplete={handleImageEditComplete} onClose={handleImageEditClose} />
+          ) : (
+            <>
+              <div className="w-[702px] flex items-center justify-center bg-black relative">
+                {editedImages.length > 0 && (
+                  <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                    <img
+                      src={editedImages[currentImageIndex].cropped as string}
+                      alt="Post"
+                      className={`max-w-full max-h-full object-contain ${editedImages[currentImageIndex].filter}`}
+                    />
+                    {editedImages.length > 1 && (
+                      <>
+                        <button onClick={handlePrevImage} className="absolute left-2 bg-white rounded-full p-2 z-10">
+                          &#8249;
+                        </button>
+                        <button onClick={handleNextImage} className="absolute right-2 bg-white rounded-full p-2 z-10">
+                          &#8250;
+                        </button>
+                      </>
+                    )}
+                  </div>
                 )}
-                {selectedFiles[0].type.startsWith('video/') && (
-                  <video controls className="object-contain h-full">
-                    <source src={URL.createObjectURL(selectedFiles[0])} />
-                  </video>
-                )}
-                {selectedFiles.length > 1 && (
-                  <>
-                    <button onClick={handlePrevFile} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full opacity-50 hover:opacity-100">
-                      &lt;
-                    </button>
-                    <button onClick={handleNextFile} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full opacity-50 hover:opacity-100">
-                      &gt;
-                    </button>
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                      {selectedFiles.map((_, index) => (
-                        <div
-                          key={index}
-                          className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-gray-800' : 'bg-gray-400'}`}
-                        ></div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
-            ) : (
-              <div className="flex flex-col items-center">
-                <p className="text-center">사진과 동영상을 여기에 끌어다 놓으세요</p>
-                <input type="file" accept="image/*,video/*" multiple onChange={handleFileChange} className="mt-4" />
               </div>
-            )}
-          </div>
-          <div className="w-[400px] bg-white flex flex-col">
-            <div className="flex items-center p-4 border-b border-gray-300">
-              {currentUser ? (
-                <div
-                  className="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10"
-                  style={{ backgroundImage: `url(${getFullImageUrl(currentUser.profile_picture)})` }}
-                ></div>
-              ) : (
-                <div className="text-[#111418]" data-icon="User" data-size="24px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                    <path
-                      d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"
-                    ></path>
-                  </svg>
+              <div className="w-[400px] bg-white flex flex-col">
+                <div className="flex items-center p-4 border-b border-gray-300">
+                  {currentUser ? (
+                    <div
+                      className="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10"
+                      style={{ backgroundImage: `url(${getFullImageUrl(currentUser.profile_picture)})` }}
+                    ></div>
+                  ) : (
+                    <div className="text-[#111418]" data-icon="User" data-size="24px" data-weight="regular">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                        <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
+                      </svg>
+                    </div>
+                  )}
+                  <span className="ml-2 text-sm font-medium text-gray-700">{currentUser?.username}</span>
                 </div>
-              )}
-              <span className="ml-2 text-sm font-medium text-gray-700">{currentUser?.username}</span>
-            </div>
-            <textarea
-              className="p-4 border-b border-gray-300 flex-1 resize-none"
-              placeholder="문구 입력..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-            />
-            <input
-                type="text"
-                placeholder="쇼핑몰 연결하기..."
-                className="flex-1 p-2 rounded-lg h-10 py-2 mr-2"
-                value={site}
-                onChange={(e) => setSite(e.target.value)}
-              />
-          </div>
+                <textarea
+                  className="p-4 border-b border-gray-300 flex-1 resize-none"
+                  placeholder="문구 입력..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                />
+                <input
+                  type="text"
+                  placeholder="쇼핑몰 연결하기..."
+                  className="flex-1 p-2 rounded-lg h-10 py-2 mr-2"
+                  value={site}
+                  onChange={(e) => setSite(e.target.value)}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

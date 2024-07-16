@@ -12,13 +12,15 @@ import { RegisterProvider } from './context/RegisterContext';
 import ReelsPage from './components/reels/ReelsPage';
 import Settings from './components/settings/Settings';
 import ChatList from './components/chat/ChatList';
+import MainPage from './components/main/MainPage';
 
 const App: React.FC = () => {
     return (
         <RegisterProvider>
             <Router>
                 <Routes>
-                    <Route path="/" element={<LoginPage />} />
+                    <Route path="/" element={<MainPage />} />
+                    <Route path="/login" element={<LoginPage />} />
                     <Route path="/join" element={<JoinPage />} />
                     <Route path="/feed" element={<FeedPage />} />
                     <Route path="/profile" element={<ProfilePage />} />

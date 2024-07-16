@@ -19,7 +19,7 @@ const BirthPage: React.FC = () => {
     <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <div className="bg-white p-8 shadow rounded-lg">
-          <img className="mx-auto h-25 w-auto" src="https://i.ibb.co/DQPXBTV/birth-logo.png" alt="Origram" />
+          <img className="mx-auto h-25 w-auto" src="/image/birth-logo.png" alt="Origram" />
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">생일 추가</h2>
           <h2 className="mt-10 text-center text-1xl font-bold leading-9 tracking-tight text-gray-900">공개 프로필에 포함되지 않습니다.</h2>
           <form className="space-y-6 mt-10" onSubmit={handleNext}>

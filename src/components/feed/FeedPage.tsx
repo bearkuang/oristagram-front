@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axios from 'axios';
 import CommentPop from './CommentPop';
 import CreateFeed from './CreateFeed';
@@ -9,7 +9,14 @@ import Sidebar from './Siderbar';
 interface User {
   id: number;
   username: string;
+  name: string;
   profile_picture: string;
+}
+
+interface NewUser {
+  id: number;
+  username: string;
+  profile_picture: string | null;
 }
 
 interface Image {
@@ -34,13 +41,29 @@ const FeedPage: React.FC = () => {
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [followedUsers, setFollowedUsers] = useState<User[]>([]);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [newUser, setNewUser] = useState<NewUser[]>([]);
   const [isCommentPopOpen, setIsCommentPopOpen] = useState(false);
   const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
   const [selectedFeed, setSelectedFeed] = useState<Feed | null>(null);
   const [commentTexts, setCommentTexts] = useState<{ [key: number]: string }>({});
   const [currentImageIndexes, setCurrentImageIndexes] = useState<{ [key: number]: number }>({});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState<{ [key: number]: boolean }>({});
   const navigate = useNavigate();
+
+  const fetchNewUser = useCallback(async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.get<NewUser[]>('http://localhost:8000/api/users/new_users/', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      setNewUser(response.data);
+    } catch (error) {
+      console.error('Error fetching new user:', error);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchFeeds = async () => {
@@ -88,7 +111,8 @@ const FeedPage: React.FC = () => {
     fetchFeeds();
     fetchFollowedUsers();
     fetchCurrentUser();
-  }, []);
+    fetchNewUser();
+  }, [fetchNewUser]);
 
   const handleLike = async (postId: number) => {
     try {
@@ -221,6 +245,26 @@ const FeedPage: React.FC = () => {
     });
   };
 
+  const handleFollow = async (userId: number) => {
+    setIsLoading(prev => ({ ...prev, [userId]: true }));
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await axios.post(`/api/follows/${userId}/follow/`, {}, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.status === 201) {
+        console.log('User follow success');
+        fetchNewUser();
+      }
+    } catch (error) {
+      console.error('Error while follow user', error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
   const handleOpenCreateFeed = () => {
     setIsCreateFeedOpen(true);
   };
@@ -243,6 +287,10 @@ const FeedPage: React.FC = () => {
 
   const handleOpenChat = () => {
     navigate("/chat");
+  }
+
+  const handleUserClick = (userId: number) => {
+    navigate(`/user/${userId}`);
   }
 
   return (
@@ -341,8 +389,9 @@ const FeedPage: React.FC = () => {
                   {followedUsers.map((user) => (
                     <div key={user.id} className="flex flex-col items-center">
                       <div
-                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14"
+                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-14 cursor-pointer"
                         style={{ backgroundImage: `url(${getFullImageUrl(user.profile_picture)})` }}
+                        onClick={() => handleUserClick(user.id)}
                       ></div>
                       <p className="text-[#111418] text-sm font-medium leading-normal">{user.username}</p>
                     </div>
@@ -354,8 +403,9 @@ const FeedPage: React.FC = () => {
                   <div className="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 justify-between">
                     <div className="flex items-center gap-4">
                       <div
-                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-fit"
+                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-fit cursor-pointer"
                         style={{ backgroundImage: `url(${getFullImageUrl(feed.author.profile_picture)})` }}
+                        onClick={() => handleUserClick(feed.author.id)}
                       ></div>
                       <div className="flex flex-col justify-center">
                         <p className="text-[#111418] text-base font-medium leading-normal line-clamp-1">{feed.author.username}</p>
@@ -396,13 +446,15 @@ const FeedPage: React.FC = () => {
                       ></div>
                     </div>
                   </div>
-                  <div className="relative flex w-full grow bg-white @container">
-                    <div className="w-full gap-4">
-                      <div className='flex items-center w-full bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded'>
-                        <a href={feed.site} target="_blank" rel="noopener noreferrer" className='text-white px-2'>상품 보러 가기</a>
+                  {feed.site && (
+                    <div className="relative flex w-full grow bg-white @container">
+                      <div className="w-full gap-4">
+                        <div className='flex items-center w-full bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded'>
+                          <a href={feed.site} target="_blank" rel="noopener noreferrer" className='text-white px-2'>상품 보러 가기</a>
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                   <div className="flex flex-wrap gap-4 px-4 py-2 py-2 justify-between">
                     <div className="flex items-center justify-center gap-2 px-3 py-2">
                       {feed.is_liked ? (
@@ -457,12 +509,13 @@ const FeedPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 justify-between">
                     <div className="flex items-center gap-4">
-                      <div
-                        className="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-14 w-fit"
-                        style={{ backgroundImage: `url(${getFullImageUrl(feed.author.profile_picture)})` }}
-                      ></div>
                       <div className="flex flex-col justify-center">
-                        <p className="text-[#111418] text-base font-medium leading-normal line-clamp-1">{feed.author.username}</p>
+                        <div className="flex justify-between">
+                          <p className="text-[#111418] text-base font-semibold leading-normal line-clamp-1">{feed.author.username}</p>
+                          <div className="flex">
+                            <p className="text-sm text-base font-medium leading-normal line-clamp-1 px-2">{feed.content}</p>
+                          </div>
+                        </div>
                         <p className="text-[#637588] text-sm font-normal leading-normal line-clamp-2 cursor-pointer" onClick={() => handleOpenCommentPop(feed)}>댓글 {feed.comment_count}개 모두 보기</p>
                       </div>
                     </div>
@@ -490,8 +543,8 @@ const FeedPage: React.FC = () => {
             </div>
           </div>
           <div className="layout-content-container flex flex-col w-80">
-            <div className="flex h-full min-h-[700px] flex-col justify-between bg-white p-4">
-              <div className="flex flex-col gap-4">
+            <div className="flex flex-col bg-white p-4">
+              <div className="flex flex-col gap-4 cursor-pointer" onClick={handleOpenProfile}>
                 {currentUser && (
                   <div className="flex items-center gap-3 px-3 py-2">
                     <div
@@ -503,10 +556,41 @@ const FeedPage: React.FC = () => {
                       }}
                     ></div>
                     <div className="flex flex-col justify-center">
-                      <p className="text-[#111418] text-base font-medium leading-normal line-clamp-1">{currentUser.username}</p>
+                      <p className="text-lg text-base font-semibold leading-normal line-clamp-1">{currentUser.username}</p>
+                      <p className="text-xs text-base font-medium leading-normal line-clamp-1">{currentUser.name}</p>
                     </div>
                   </div>
                 )}
+              </div>
+
+              <div className="mt-6">
+                <p className="text-[#111418] text-base font-medium leading-normal mb-4">회원님을 위한 추천</p>
+                <div className="flex flex-col gap-4">
+                  {newUser.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between gap-3 px-3 py-2">
+                      <div className="flex items-center gap-3 cursor-pointer" onClick={() => handleUserClick(user.id)}>
+                        <div
+                          className="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10"
+                          style={{
+                            backgroundImage: `url(${user.profile_picture
+                              ? getFullImageUrl(user.profile_picture)
+                              : '/image/default_profile_image.png'})`,
+                          }}
+                        ></div>
+                        <div className="flex flex-col justify-center">
+                          <p className="text-[#111418] text-sm font-medium leading-normal line-clamp-1">{user.username}</p>
+                        </div>
+                      </div>
+                      <button
+                        className={`text-sm font-medium ${isLoading[user.id] ? 'text-gray-500' : 'text-blue-500'}`}
+                        onClick={() => handleFollow(user.id)}
+                        disabled={isLoading[user.id] || false}
+                      >
+                        {isLoading[user.id] ? '처리 중...' : '팔로우'}
+                      </button>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

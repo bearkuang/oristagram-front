@@ -46,6 +46,12 @@ const Settings: React.FC = () => {
         fetchCurrentUser();
     }, []);
 
+    const logout = () => {
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        navigate('/');
+    };
+
     const handleOpenCreateFeed = () => {
         setIsCreateFeedOpen(true);
     };
@@ -90,7 +96,7 @@ const Settings: React.FC = () => {
                         <div className="flex flex-col gap-2">
                             <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
                                 <div className="text-[#111418]" data-icon="House" data-size="24px" data-weight="fill">
-                                    <img className="w-6 h-6" src="https://i.ibb.co/2WZXyjX/icon-rubber-duck.png" alt="chat" />
+                                    <img className="w-6 h-6" src="/image/icon-rubber-duck.png" alt="chat" />
                                 </div>
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Origram</p>
                             </div>
@@ -123,7 +129,7 @@ const Settings: React.FC = () => {
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Reels</p>
                             </div>
                             <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenChat}>
-                                <img className="w-6 h-6" src="https://i.ibb.co/WcxN6vm/chat-icon.png" alt="chat" />
+                                <img className="w-6 h-6" src="/image/chat-icon.png" alt="chat" />
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Chat</p>
                             </div>
                             <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenProfile}>
@@ -169,7 +175,7 @@ const Settings: React.FC = () => {
                         </span>
                     </div>
                     <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={handleOpenEditProfile}>
-                        <img src="https://i.ibb.co/gm1bXVY/ori-profile-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
+                        <img src="/image/ori-profile-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
                         <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">프로필 편집</span>
                     </div>
                     <div className='w-[238px] h-[50px] bg-[rgba(0,0,0,0)] relative z-[164] mt-0 mr-0 mb-0 ml-0'>
@@ -178,8 +184,12 @@ const Settings: React.FC = () => {
                         </span>
                     </div>
                     <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={handelOpenAccountStatus}>
-                        <img src="https://i.ibb.co/wrpLsTJ/ori-people-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
+                        <img src="/image/ori-people-icon.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
                         <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">계정 상태</span>
+                    </div>
+                    <div className="flex w-full items-center rounded-md ml-5 cursor-pointer hover:bg-gray-200 px-3 py-1.5" onClick={logout}>
+                        <img src="/image/ori-icon-exit.png" alt="Profile Edit" className="h-5 w-5 rounded-full" />
+                        <span className="ml-3 text-[#1f1f1f] text-[12px] font-semibold leading-[25.415px]">로그아웃</span>
                     </div>
                 </div>
             </div>
