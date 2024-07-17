@@ -5,6 +5,7 @@ import CommentBubble from './CommentBubble';
 import CreateFeed from '../feed/CreateFeed';
 import Sidebar from '../feed/Siderbar';
 import { getFullImageUrl } from '../../services/utils';
+import VideoSelector from './VideoSelector';
 
 interface User {
     id: number;
@@ -38,7 +39,9 @@ const ReelsPage: React.FC = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [currentIndex, setCurrentIndex] = useState(0); // 처음 시작 인덱스를 0으로 설정
     const navigate = useNavigate();
+    const reelsContainerRef = useRef<HTMLDivElement>(null);
     const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+    const [isCreateReelsOpen, setIsCreateReelsOpen] = useState(false);
 
     useEffect(() => {
         const fetchReels = async () => {
@@ -75,19 +78,28 @@ const ReelsPage: React.FC = () => {
 
     useEffect(() => {
         const handleScroll = () => {
-            videoRefs.current.forEach((video, index) => {
-                if (video) {
-                    if (index === currentIndex) {
-                        video.play();
-                    } else {
-                        video.pause();
-                    }
+            if (reelsContainerRef.current) {
+                const container = reelsContainerRef.current;
+                const scrollPosition = container.scrollTop;
+                const reelHeight = container.clientHeight;
+                const newIndex = Math.round(scrollPosition / reelHeight);
+
+                if (newIndex !== currentIndex) {
+                    setCurrentIndex(newIndex);
                 }
-            });
+            }
         };
 
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
+        const container = reelsContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleScroll);
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener('scroll', handleScroll);
+            }
+        };
     }, [currentIndex]);
 
     useEffect(() => {
@@ -204,29 +216,21 @@ const ReelsPage: React.FC = () => {
         navigate(`/user/${userId}`);
     };
 
-    const handleNext = () => {
-        setCurrentIndex((prevIndex) => (prevIndex + 1) % reels.length);
-    };
-
-    const handlePrev = () => {
-        setCurrentIndex((prevIndex) => (prevIndex - 1 + reels.length) % reels.length);
-    };
+    const handleOpenCreateReels = () => {
+        setIsCreateReelsOpen(true);
+    }
 
     return (
         <div className="relative flex size-full min-h-screen flex-col bg-white group/design-root overflow-x-hidden">
-            <div className="layout-container flex h-full grow flex-col">
-                <div className="flex justify-between">
-                    <div className="layout-content-container flex flex-col w-60 border-r border-gray-300">
+            <div className="flex h-full grow flex-col">
+                <div className="flex">
+                    <div className="flex flex-col w-60 border-r border-gray-300">
                         <div className="flex h-full min-h-[700px] flex-col justify-between bg-white p-4">
                             <div className="flex flex-col gap-4">
                                 <div className="flex flex-col gap-2">
                                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={() => navigate('/feed')}>
                                         <div className="text-[#111418]" data-icon="House" data-size="24px" data-weight="fill">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                                <path
-                                                    d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"
-                                                ></path>
-                                            </svg>
+                                            <img className="w-6 h-6" src="https://i.ibb.co/2WZXyjX/icon-rubber-duck.png" alt="chat" />
                                         </div>
                                         <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Origram</p>
                                     </div>
@@ -258,6 +262,16 @@ const ReelsPage: React.FC = () => {
                                         </div>
                                         <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Reels</p>
                                     </div>
+                                    <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenCreateReels}>
+                                        <div className="text-[#111418]" data-icon="MonitorPlay" data-size="24px" data-weight="regular">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                                <path
+                                                    d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Zm-3.56-110.66-48-32A8,8,0,0,0,104,88v64a8,8,0,0,0,12.44,6.66l48-32a8,8,0,0,0,0-13.32ZM120,137.05V103l25.58,17Z"
+                                                ></path>
+                                            </svg>
+                                        </div>
+                                        <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create Reels</p>
+                                    </div>
                                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer">
                                         <div className="text-[#111418]" data-icon="ShoppingBag" data-size="24px" data-weight="regular">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
@@ -285,99 +299,81 @@ const ReelsPage: React.FC = () => {
                                         )}
                                         <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Profile</p>
                                     </div>
+                                    <div className="mt-auto pt-4">
+                                        <div
+                                            className="flex items-center gap-3 px-3 py-2 cursor-pointer"
+                                            onClick={() => navigate('/settings')}
+                                        >
+                                            <div className="text-[#111418]" data-icon="Gear" data-size="24px" data-weight="regular">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                                                    <path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.49A107.71,107.71,0,0,0,73.89,34.49a8,8,0,0,0-3.94,6L67.21,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.93,107.21,107.21,0,0,0-10.88,26.25,8,8,0,0,0,1.48,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.49,107.71,107.71,0,0,0,26.25-10.87,8,8,0,0,0,3.94-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.93,107.21,107.21,0,0,0,10.88-26.25,8,8,0,0,0-1.48-7.06ZM128,168a40,40,0,1,1,40-40A40,40,0,0,1,128,168Z"></path>
+                                                </svg>
+                                            </div>
+                                            <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">설정</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <Sidebar isOpen={isSidebarOpen} onClose={handleSidebarToggle} />
-                    <div className="gap-1 px-6 flex flex-1 justify-center py-5 overflow-x-auto">
-                        <div className="relative flex items-center">
-                            <button onClick={handlePrev} className="absolute left-0 z-10 p-2 bg-gray-800 text-white rounded-full">
-                                &lt;
-                            </button>
-                            <div className="layout-content-container flex flex-row justify-center items-center space-x-6" style={{ transform: `translateX(-${(currentIndex - 1) * 100}%)`, transition: 'transform 0.5s ease' }}>
-                                {reels.map((reel, index) => (
-                                    <div key={reel.id} className={`relative ${index === currentIndex ? 'z-20' : 'z-10'} transition-transform duration-500`} style={{ transform: index === currentIndex ? 'scale(1.2)' : 'scale(1)', width: '300px', height: '500px' }}>
-                                        <video
-                                            ref={(el) => (videoRefs.current[index] = el)}
-                                            src={reel.videos && reel.videos[0]?.file ? getFullImageUrl(reel.videos[0].file) : ''}
-                                            className="absolute top-0 left-0 w-full h-full object-cover"
-                                            onClick={(e) => {
-                                                const video = e.target as HTMLVideoElement;
-                                                video.paused ? video.play() : video.pause();
-                                            }}
-                                            muted
-                                            loop
-                                            playsInline
-                                        />
-                                        <div className="absolute bottom-2 left-2 flex flex-col items-start gap-2 p-2 bg-opacity-50 rounded cursor-pointer" onClick={() => handleUserClick(reel.author.id)}>
-                                            <div className="flex items-center gap-2">
-                                                <div
-                                                    className="bg-center bg-no-repeat bg-cover rounded-full h-10 w-10"
-                                                    style={{ backgroundImage: `url(${getFullImageUrl(reel.author.profile_picture)})` }}
-                                                ></div>
-                                                <p className="text-white text-sm font-semibold">{reel.author.username}</p>
-                                            </div>
-                                            <div>
-                                                <p className="text-white text-sm font-semibold">{reel.content}</p>
+                    <div className="relative ml-40">
+                        <div className="flex relative justify-center items-center bg-white min-h-screen">
+                            <div className="relative w-[650px] h-[1200px]">
+                                <div ref={reelsContainerRef} className="w-full h-full overflow-y-scroll snap-y snap-mandatory scrollbar-hide">
+                                    {reels.map((reel, index) => (
+                                        <div key={reel.id} className="relative h-full w-full snap-center py-4">
+                                            <div className="absolute inset-0 rounded-3xl shadow-lg overflow-hidden" style={{ margin: '5% 0' }}>
+                                                <div className="relative w-full h-full rounded-3xl shadow-[0_0_20px_rgba(0,0,0,0.3)]">
+                                                    <video
+                                                        ref={(el) => (videoRefs.current[index] = el)}
+                                                        src={reel.videos && reel.videos[0]?.file ? getFullImageUrl(reel.videos[0].file) : ''}
+                                                        className="w-full h-full object-cover rounded-3xl"
+                                                        onClick={(e) => {
+                                                            const video = e.target as HTMLVideoElement;
+                                                            video.paused ? video.play() : video.pause();
+                                                        }}
+                                                        muted
+                                                        loop
+                                                        playsInline
+                                                    />
+                                                    <div className="absolute bottom-4 left-4 right-12">
+                                                        <div className="flex items-center gap-2 mb-2">
+                                                            <img className="w-10 h-10 rounded-full" onClick={() => handleUserClick(reel.author.id)} src={getFullImageUrl(reel.author.profile_picture)} alt={reel.author.username} />
+                                                            <span className="text-white font-semibold">{reel.author.username}</span>
+                                                        </div>
+                                                        <p className="text-white text-sm">{reel.content}</p>
+                                                    </div>
+                                                    <div className="absolute bottom-4 right-4 flex flex-col items-center space-y-4">
+                                                        <button onClick={() => reel.is_liked ? handleUnlike(reel.id) : handleLike(reel.id)} className="text-white">
+                                                            {reel.is_liked ? "❤️" : "🤍"}
+                                                        </button>
+                                                        <p className="text-white text-xs">{reel.like_count}</p>
+                                                        <button onClick={() => handleOpenCommentPop(reel)} className="text-white">
+                                                            💬
+                                                        </button>
+                                                        <p className="text-white text-xs">{reel.comment_count}</p>
+                                                        <button onClick={() => reel.is_saved ? handleUnsave(reel.id) : handleSave(reel.id)} className="text-white">
+                                                            {reel.is_saved ? "📥" : "📤"}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="absolute bottom-2 right-2 flex flex-col items-end p-2 space-y-2">
-                                            {reel.is_liked ? (
-                                                <button onClick={() => handleUnlike(reel.id)} className="text-[#e74c3c]">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                                        <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
-                                                    </svg>
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => handleLike(reel.id)} className="text-white">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                                        <path d="M178,32c-20.65,0-38.73,8.88-50,23.89C116.73,40.88,98.65,32,78,32A62.07,62.07,0,0,0,16,94c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,220.66,240,164,240,94A62.07,62.07,0,0,0,178,32ZM128,206.8C109.74,196.16,32,147.69,32,94A46.06,46.06,0,0,1,78,48c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,147.61,146.24,196.15,128,206.8Z"></path>
-                                                    </svg>
-                                                </button>
-                                            )}
-                                            <p className="text-white text-xs font-bold mr-2">{reel.like_count}</p>
-                                            <button onClick={() => handleOpenCommentPop(reel)} className="text-white">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                                    <path
-                                                        d="M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"
-                                                    ></path>
-                                                </svg>
-                                            </button>
-                                            {reel.is_saved ? (
-                                                <button onClick={() => handleUnsave(reel.id)} className="text-[#ff9800]">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                                        <path
-                                                            d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
-                                                        ></path>
-                                                    </svg>
-                                                </button>
-                                            ) : (
-                                                <button onClick={() => handleSave(reel.id)} className="text-white">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                                        <path
-                                                            d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
-                                                        ></path>
-                                                    </svg>
-                                                </button>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                            <button onClick={handleNext} className="absolute right-0 z-10 p-2 bg-gray-800 text-white rounded-full">
-                                &gt;
-                            </button>
                         </div>
                     </div>
                 </div>
+                {isCommentPopOpen && selectedReels && (
+                    <CommentBubble reelsId={selectedReels.id} onClose={handleCloseCommentPop} />
+                )}
+                {isCreateFeedOpen && (
+                    <CreateFeed onClose={handleCloseCreateFeed} />
+                )}
+                {isCreateReelsOpen && <VideoSelector onClose={() => setIsCreateReelsOpen(false)} />}
             </div>
-            {isCommentPopOpen && selectedReels && (
-                <CommentBubble reelsId={selectedReels.id} onClose={handleCloseCommentPop} />
-            )}
-            {isCreateFeedOpen && (
-                <CreateFeed onClose={handleCloseCreateFeed} />
-            )}
         </div>
     );
 };

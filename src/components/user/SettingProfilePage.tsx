@@ -24,6 +24,7 @@ const SettingProfilePage: React.FC = () => {
             if (state.profile_picture) formData.append('profile_picture', state.profile_picture);
             formData.append('website', state.website);
             formData.append('bio', state.bio);
+            formData.append('verification_code', state.verification_code);
 
             await axios.post('http://localhost:8000/api/auth/register/', formData);
 

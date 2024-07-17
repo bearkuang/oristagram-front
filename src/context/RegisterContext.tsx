@@ -9,6 +9,7 @@ interface RegisterState {
     profile_picture: File | null;
     website: string;
     bio: string;
+    verification_code: string;
 }
 
 const initialState: RegisterState = {
@@ -20,6 +21,7 @@ const initialState: RegisterState = {
     profile_picture: null,
     website: '',
     bio: '',
+    verification_code: '',
 };
 
 type RegisterAction = 
