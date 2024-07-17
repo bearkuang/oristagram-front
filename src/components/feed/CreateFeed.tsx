@@ -21,6 +21,7 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [content, setContent] = useState('');
   const [site, setSite] = useState('');
+  const [isChecked, setIsChecked] = useState(false);
 
   const applyFilterToImage = async (imageData: ImageData): Promise<Blob> => {
     return new Promise((resolve, reject) => {
@@ -35,12 +36,15 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
           reject(new Error('Failed to get canvas context'));
           return;
         }
-        ctx.filter = imageData.filter || 'none';
-        console.log(`Applying filter: ${ctx.filter}`);
+
+        // 필터 적용
+        if (imageData.filter && imageData.filter !== 'none') {
+          ctx.filter = imageData.filter;
+        }
+
         ctx.drawImage(img, 0, 0, img.width, img.height);
         canvas.toBlob((blob) => {
           if (blob) {
-            console.log('Blob created:', blob);
             resolve(blob);
           } else {
             reject(new Error('Failed to create blob from canvas'));
@@ -60,16 +64,10 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
       formData.append('site', site);
 
       for (let i = 0; i < editedImages.length; i++) {
-        console.log(`Processing image ${i} with filter ${editedImages[i].filter}`);
         const filteredBlob = await applyFilterToImage(editedImages[i]);
         formData.append('files', filteredBlob, `image${i}.jpg`);
-        console.log(`Appended image ${i} to formData`);
+        formData.append(`filter${i}`, editedImages[i].filter || 'none');
       }
-
-      // Debugging FormData content
-      formData.forEach((value, key) => {
-        console.log(key, value);
-      });
 
       const response = await axios.post('http://localhost:8000/api/posts/', formData, {
         headers: {
@@ -89,7 +87,6 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
 
   const handleImageEditComplete = (images: ImageData[]) => {
     setEditedImages(images);
-    setStep('post');
   };
 
   const handlePrevImage = () => {
@@ -102,6 +99,14 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
 
   const handleImageEditClose = () => {
     onClose();
+  };
+
+  const handleSaveFilter = (index: number, filter: string) => {
+    setEditedImages(prevImages => {
+      const newImages = [...prevImages];
+      newImages[index] = { ...newImages[index], filter: filter };
+      return newImages;
+    });
   };
 
   useEffect(() => {
@@ -137,29 +142,25 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
           </button>
         </div>
         <div className="flex flex-1 overflow-hidden">
-          {step === 'edit' ? (
-            <ImageEditModal onComplete={handleImageEditComplete} onClose={handleImageEditClose} />
+          {editedImages.length === 0 ? (
+            <ImageEditModal onComplete={handleImageEditComplete} onClose={onClose} />
           ) : (
             <>
               <div className="w-[702px] flex items-center justify-center bg-black relative">
-                {editedImages.length > 0 && (
-                  <div className="w-full h-full flex items-center justify-center overflow-hidden">
-                    <img
-                      src={editedImages[currentImageIndex].cropped as string}
-                      alt="Post"
-                      className={`max-w-full max-h-full object-contain ${editedImages[currentImageIndex].filter}`}
-                    />
-                    {editedImages.length > 1 && (
-                      <>
-                        <button onClick={handlePrevImage} className="absolute left-2 bg-white rounded-full p-2 z-10">
-                          &#8249;
-                        </button>
-                        <button onClick={handleNextImage} className="absolute right-2 bg-white rounded-full p-2 z-10">
-                          &#8250;
-                        </button>
-                      </>
-                    )}
-                  </div>
+                <img
+                  src={editedImages[currentImageIndex].cropped as string}
+                  alt="Edited"
+                  className={`max-w-full max-h-full object-contain ${editedImages[currentImageIndex].filter}`}
+                />
+                {editedImages.length > 1 && (
+                  <>
+                    <button onClick={handlePrevImage} className="absolute left-2 bg-white rounded-full p-2 z-10">
+                      &#8249;
+                    </button>
+                    <button onClick={handleNextImage} className="absolute right-2 bg-white rounded-full p-2 z-10">
+                      &#8250;
+                    </button>
+                  </>
                 )}
               </div>
               <div className="w-[400px] bg-white flex flex-col">
@@ -184,12 +185,29 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
+                <label className="p-4 border-b border-gray-300 flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(e) => {
+                      setIsChecked(e.target.checked);
+                      if (e.target.checked) {
+                        setSite('http://localhost:4000/category');
+                      } else {
+                        setSite('');
+                      }
+                    }}
+                    className="mr-2"
+                  />
+                  쇼핑몰 사이트 연결하기
+                </label>
                 <input
                   type="text"
                   placeholder="쇼핑몰 연결하기..."
                   className="flex-1 p-2 rounded-lg h-10 py-2 mr-2"
                   value={site}
                   onChange={(e) => setSite(e.target.value)}
+                  disabled={isChecked}
                 />
               </div>
             </>

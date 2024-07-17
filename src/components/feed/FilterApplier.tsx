@@ -8,6 +8,7 @@ interface FilterApplierProps {
     onApply: (filteredImages: ImageData[]) => void;
     onPrevImage: () => void;
     onNextImage: () => void;
+    onSaveFilter: (index: number, filter: string) => void;
 }
 
 const filters = [
@@ -15,9 +16,15 @@ const filters = [
     { name: 'Grayscale', class: 'grayscale' },
     { name: 'Sepia', class: 'sepia' },
     { name: 'Invert', class: 'invert' },
+    { name: 'Brightness', class: 'brightness' },
+    { name: 'Contrast', class: 'contrast' },
+    { name: 'Sharpness', class: 'sharpness' },
+    { name: 'Blur', class: 'blur' },
+    { name: 'Emboss', class: 'emboss' },
+    { name: 'Edge Enhance', class: 'edge_enhance' },
 ];
 
-const FilterApplier: React.FC<FilterApplierProps> = ({ images, currentIndex, onApply, onPrevImage, onNextImage }) => {
+const FilterApplier: React.FC<FilterApplierProps> = ({ images, currentIndex, onApply, onPrevImage, onNextImage, onSaveFilter }) => {
     const [filteredImages, setFilteredImages] = useState<ImageData[]>(images);
     const [selectedFilter, setSelectedFilter] = useState('');
 
@@ -32,6 +39,10 @@ const FilterApplier: React.FC<FilterApplierProps> = ({ images, currentIndex, onA
         );
         setFilteredImages(updatedImages);
         onApply(updatedImages);
+    };
+
+    const handleSaveFilter = () => {
+        onSaveFilter(currentIndex, selectedFilter);
     };
 
     return (
@@ -68,6 +79,12 @@ const FilterApplier: React.FC<FilterApplierProps> = ({ images, currentIndex, onA
                             {filter.name}
                         </button>
                     ))}
+                    <button
+                        onClick={handleSaveFilter}
+                        className="mt-4 bg-green-500 text-white px-4 py-2 rounded"
+                    >
+                        필터 적용
+                    </button>
                 </div>
             </div>
             <div className="flex-shrink-0">

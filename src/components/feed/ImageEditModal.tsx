@@ -15,7 +15,6 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ onComplete, onClose }) 
     const [selectedImages, setSelectedImages] = useState<ImageData[]>([]);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
 
     const handleImageSelect = (images: ImageData[]) => {
         setSelectedImages(images);
@@ -31,12 +30,12 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ onComplete, onClose }) 
         });
     };
 
-    const handleVideoSelect = (videos: File[]) => {
-        setSelectedVideo(videos[0]);
-    };
-
-    const handleVideoEditComplete = (editedVideo: File) => {
-        onComplete([{ file: editedVideo, url: URL.createObjectURL(editedVideo), cropped: URL.createObjectURL(editedVideo), filter: 'none' }]);
+    const handleSaveFilter = (index: number, filter: string) => {
+        setSelectedImages(prevImages => {
+            const newImages = [...prevImages];
+            newImages[index] = { ...newImages[index], filter: filter };
+            return newImages;
+        });
     };
 
     const handleFilterApply = (filteredImages: ImageData[]) => {
@@ -148,6 +147,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ onComplete, onClose }) 
                                 onApply={handleFilterApply}
                                 onPrevImage={handlePrevImage}
                                 onNextImage={handleNextImage}
+                                onSaveFilter={handleSaveFilter}
                             />
                         )}
                     </div>
