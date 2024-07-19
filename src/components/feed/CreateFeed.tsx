@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { getFullImageUrl } from '../../services/utils';
 import ImageEditModal from './ImageEditModal';
@@ -22,6 +22,8 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
   const [content, setContent] = useState('');
   const [site, setSite] = useState('');
   const [isChecked, setIsChecked] = useState(false);
+  const [tags, setTags] = useState<string[]>([]);
+  const [mentions, setMentions] = useState<string[]>([]);
 
   const applyFilterToImage = async (imageData: ImageData): Promise<Blob> => {
     return new Promise((resolve, reject) => {
@@ -62,6 +64,8 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
       const formData = new FormData();
       formData.append('content', content);
       formData.append('site', site);
+      formData.append('tags', JSON.stringify(tags));
+      formData.append('mentions', JSON.stringify(mentions));
 
       for (let i = 0; i < editedImages.length; i++) {
         const filteredBlob = await applyFilterToImage(editedImages[i]);
@@ -85,6 +89,21 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
     }
   };
 
+  const extractTagsAndMentions = useCallback((text: string) => {
+    const tagRegex = /#([\p{L}\p{N}][^\s#@]+)/gu;
+    const mentionRegex = /@([\p{L}\p{N}][^\s#@]+)/gu;
+
+    const newTags = Array.from(text.matchAll(tagRegex), match => match[1]);
+    const newMentions = Array.from(text.matchAll(mentionRegex), match => match[1]);
+
+    setTags(newTags);
+    setMentions(newMentions);
+  }, []);
+
+  useEffect(() => {
+    extractTagsAndMentions(content);
+  }, [content, extractTagsAndMentions]);
+
   const handleImageEditComplete = (images: ImageData[]) => {
     setEditedImages(images);
   };
@@ -95,18 +114,6 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
 
   const handleNextImage = () => {
     setCurrentImageIndex((prevIndex) => (prevIndex < editedImages.length - 1 ? prevIndex + 1 : 0));
-  };
-
-  const handleImageEditClose = () => {
-    onClose();
-  };
-
-  const handleSaveFilter = (index: number, filter: string) => {
-    setEditedImages(prevImages => {
-      const newImages = [...prevImages];
-      newImages[index] = { ...newImages[index], filter: filter };
-      return newImages;
-    });
   };
 
   useEffect(() => {
@@ -181,10 +188,15 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
                 </div>
                 <textarea
                   className="p-4 border-b border-gray-300 flex-1 resize-none"
-                  placeholder="문구 입력..."
+                  placeholder="문구 입력... (#태그 및 @언급 사용 가능)"
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                 />
+                {/* 태그와 언급 표시 (선택적) */}
+                <div className="p-2">
+                  <p>태그: {tags.join(', ')}</p>
+                  <p>언급: {mentions.join(', ')}</p>
+                </div>
                 <label className="p-4 border-b border-gray-300 flex items-center">
                   <input
                     type="checkbox"
@@ -203,7 +215,7 @@ const CreateFeed: React.FC<CreateFeedProps> = ({ onClose }) => {
                 </label>
                 <input
                   type="text"
-                  placeholder="쇼핑몰 연결하기..."
+                  placeholder="쇼핑몰 연결하기...(출처 주소를 입력해주세요)"
                   className="flex-1 p-2 rounded-lg h-10 py-2 mr-2"
                   value={site}
                   onChange={(e) => setSite(e.target.value)}

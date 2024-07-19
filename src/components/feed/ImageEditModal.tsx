@@ -74,13 +74,13 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ onComplete, onClose }) 
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <button onClick={onClose} className="absolute top-4 right-4 text-gray-200 hover:text-gray-700">
+                X
+            </button>
             <div className="bg-white w-[1102px] h-[694px] flex flex-col rounded-lg relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-                    X
-                </button>
                 <div className="flex justify-between items-center p-4 border-b w-full">
                     <button onClick={handleBack}>
-                        {step === 'select' ? 'X' : '뒤로'}
+                        {step === 'select' ? '←' : '뒤로'}
                     </button>
                     <span className="mx-auto">{step === 'select' ? '새 게시물 만들기' : step === 'edit' ? '자르기' : '필터'}</span>
                     {step !== 'select' && (
@@ -115,7 +115,7 @@ const ImageEditModal: React.FC<ImageEditModalProps> = ({ onComplete, onClose }) 
                                 >
                                     &#8250;
                                 </button>
-                                <div className="absolute bottom-4 right-4 flex items-center">
+                                <div className="absolute bottom-4 right-12 flex mr-20 items-center">
                                     <button onClick={handleAddMoreImages} className="bg-blue-500 text-white px-4 py-2 rounded">
                                         +
                                     </button>

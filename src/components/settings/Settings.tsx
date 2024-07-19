@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import Sidebar from '../feed/Siderbar';
 import EditProfile from './EditProfile';
 import AccountStatus from './AccountStatus';
+import VideoSelector from '../reels/VideoSelector';
 
 interface User {
     id: number;
@@ -22,6 +23,7 @@ const Settings: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isCreateFeedOpen, setIsCreateFeedOpen] = useState(false);
+    const [isCreateReelsOpen, setIsCreateReelsOpen] = useState(false);
     const [activeComponent, setActiveComponent] = useState<'editProfile' | 'accountStatus' | null>(null);
     const navigate = useNavigate();
 
@@ -80,6 +82,10 @@ const Settings: React.FC = () => {
         setActiveComponent(null);
     }
 
+    const handleOpenCreateReels = () => {
+        setIsCreateReelsOpen(true);
+    }
+
     const handleOpenChat = () => {
         navigate("/chat");
     }
@@ -116,17 +122,15 @@ const Settings: React.FC = () => {
                                         <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"></path>
                                     </svg>
                                 </div>
-                                <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create</p>
+                                <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create Feed</p>
                             </div>
-                            <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenReels}>
-                                <div className="text-[#111418]" data-icon="MonitorPlay" data-size="24px" data-weight="regular">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                                        <path
-                                            d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Zm-3.56-110.66-48-32A8,8,0,0,0,104,88v64a8,8,0,0,0,12.44,6.66l48-32a8,8,0,0,0,0-13.32ZM120,137.05V103l25.58,17Z"
-                                        ></path>
-                                    </svg>
-                                </div>
+                            <div className="flex items-center gap-3 px-3.5 py-2 cursor-pointer" onClick={handleOpenReels}>
+                                <img className="w-5 h-5" src="/image/reels-icon.png" alt="reels" />
                                 <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Reels</p>
+                            </div>
+                            <div className="flex items-center gap-3 px-3.5 py-2 cursor-pointer" onClick={handleOpenCreateReels}>
+                                <img className="w-5 h-5" src="/image/add-reels-icon.png" alt="create reels" />
+                                <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create Reels</p>
                             </div>
                             <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenChat}>
                                 <img className="w-6 h-6" src="/image/chat-icon.png" alt="chat" />
@@ -205,6 +209,7 @@ const Settings: React.FC = () => {
                 )}
             </div>
             {isCreateFeedOpen && <CreateFeed onClose={handleCloseCreateFeed} />}
+            {isCreateReelsOpen && <VideoSelector onClose={() => setIsCreateReelsOpen(false)} />}
         </div>
     );
 };

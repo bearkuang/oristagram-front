@@ -149,11 +149,16 @@ const EditProfile: React.FC<EditProfileProps> = ({ currentUser, onClose }) => {
                     </button>
                 </div>
                 {isModalOpen && (
-                    <ProfilePictureModal
-                        onClose={() => setIsModalOpen(false)}
-                        onFileChange={handleProfilePictureChange}
-                        onResetPicture={handleResetProfilePicture}
-                    />
+                    <div className="fixed inset-0 z-[1000] flex items-center justify-center">
+                        <div className="absolute inset-0 bg-black opacity-50"></div>
+                        <div className="relative z-[1001]">
+                            <ProfilePictureModal
+                                onClose={() => setIsModalOpen(false)}
+                                onFileChange={handleProfilePictureChange}
+                                onResetPicture={handleResetProfilePicture}
+                            />
+                        </div>
+                    </div>
                 )}
                 <div className="mb-4">
                     <label htmlFor="name" className="block text-sm font-semibold mb-2">이름</label>

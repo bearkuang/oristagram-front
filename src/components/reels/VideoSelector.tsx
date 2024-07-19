@@ -25,10 +25,10 @@ const VideoSelector: React.FC<VideoSelectorProps> = ({ onClose }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <button onClick={onClose} className="absolute top-4 right-4 text-gray-200 hover:text-gray-700">
+                X
+            </button>
             <div className="bg-white w-[1102px] h-[694px] flex flex-col rounded-lg relative">
-                <button onClick={onClose} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700">
-                    X
-                </button>
                 <div className="flex justify-center items-center h-full">
                     <div className="text-center">
                         <h3 className="text-xl mb-4">새 릴스 만들기</h3>

@@ -61,31 +61,6 @@ const ChatRoom: React.FC<ChatRoomProps> = ({ chatroomId, currentUser, onClose })
         fetchMessages();
         fetchChatPartner();
 
-        // WebSocket connection
-        const wsUrl = `ws://localhost:8000/ws/chat/${chatroomId}/`;
-        ws.current = new WebSocket(wsUrl);
-
-        ws.current.onopen = () => {
-            console.log('WebSocket connection established');
-        };
-
-        ws.current.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            setMessages((prevMessages) => [...prevMessages, data.message]);
-        };
-
-        ws.current.onclose = () => {
-            console.log('WebSocket connection closed');
-        };
-
-        ws.current.onerror = (error) => {
-            console.error('WebSocket error:', error);
-        };
-
-        // Cleanup on component unmount
-        return () => {
-            ws.current?.close();
-        };
     }, [chatroomId, currentUser.id]);
 
     const handleSendMessage = async () => {

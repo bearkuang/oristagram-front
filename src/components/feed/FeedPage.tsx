@@ -1,6 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import CommentPop from './CommentPop';
+import ReelsCommentPop from '../reels/ReelsCommentPop';
 import CreateFeed from './CreateFeed';
 import VideoSelector from '../reels/VideoSelector';
 import { getFullImageUrl } from '../../services/utils';
@@ -29,13 +30,20 @@ interface Feed {
   id: number;
   author: User;
   content: string;
-  images: Image[];
+  images?: Image[];
+  videos?: Video[];
   site: string;
   created_at: string;
   like_count: number;
   comment_count: number;
   is_liked: boolean;
   is_saved: boolean;
+  type: 'post' | 'reels';
+}
+
+interface Video {
+  id: number;
+  file: string;
 }
 
 const FeedPage: React.FC = () => {
@@ -51,6 +59,10 @@ const FeedPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState<{ [key: number]: boolean }>({});
   const [isCreateReelsOpen, setIsCreateReelsOpen] = useState(false);
+  const [mutedVideos, setMutedVideos] = useState<Set<number>>(new Set());
+  const videoRefs = useRef<{ [key: number]: HTMLVideoElement }>({});
+  const [isReelsCommentPopOpen, setIsReelsCommentPopOpen] = useState(false);
+  const [expandedContents, setExpandedContents] = useState<{ [key: number]: boolean }>({});
   const navigate = useNavigate();
 
   const fetchNewUser = useCallback(async () => {
@@ -68,17 +80,17 @@ const FeedPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchFeeds = async () => {
+    const fetchCombinedFeed = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get('http://localhost:8000/api/posts/feed/', {
+        const response = await axios.get('http://localhost:8000/api/posts/combined_feed/', {
           headers: {
             Authorization: `Bearer ${token}`
           }
         });
         setFeeds(response.data);
       } catch (error) {
-        console.error('Error fetching feeds:', error);
+        console.error('Error fetching combined feed:', error);
       }
     };
 
@@ -110,11 +122,36 @@ const FeedPage: React.FC = () => {
       }
     };
 
-    fetchFeeds();
+    fetchCombinedFeed();
     fetchFollowedUsers();
     fetchCurrentUser();
     fetchNewUser();
   }, [fetchNewUser]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            (entry.target as HTMLVideoElement).play();
+          } else {
+            (entry.target as HTMLVideoElement).pause();
+          }
+        });
+      },
+      { threshold: 0.5 }
+    );
+
+    Object.values(videoRefs.current).forEach((video) => {
+      if (video) observer.observe(video);
+    });
+
+    return () => {
+      Object.values(videoRefs.current).forEach((video) => {
+        if (video) observer.unobserve(video);
+      });
+    };
+  }, [feeds]);
 
   const handleLike = async (postId: number) => {
     try {
@@ -190,11 +227,16 @@ const FeedPage: React.FC = () => {
 
   const handleOpenCommentPop = (feed: Feed) => {
     setSelectedFeed(feed);
-    setIsCommentPopOpen(true);
+    if (feed.type === 'post') {
+      setIsCommentPopOpen(true);
+    } else if (feed.type === 'reels') {
+      setIsReelsCommentPopOpen(true);
+    }
   };
 
   const handleCloseCommentPop = () => {
     setIsCommentPopOpen(false);
+    setIsReelsCommentPopOpen(false);
     setSelectedFeed(null);
   };
 
@@ -231,7 +273,7 @@ const FeedPage: React.FC = () => {
     setCurrentImageIndexes((prevIndexes) => {
       const currentIndex = prevIndexes[feedId] || 0;
       const feed = feeds.find(feed => feed.id === feedId);
-      const imagesLength = feed?.images.length || 0;
+      const imagesLength = feed?.images?.length || 0;
       const newIndex = (currentIndex - 1 + imagesLength) % imagesLength;
       return { ...prevIndexes, [feedId]: newIndex };
     });
@@ -241,7 +283,7 @@ const FeedPage: React.FC = () => {
     setCurrentImageIndexes((prevIndexes) => {
       const currentIndex = prevIndexes[feedId] || 0;
       const feed = feeds.find(feed => feed.id === feedId);
-      const imagesLength = feed?.images.length || 0;
+      const imagesLength = feed?.images?.length || 0;
       const newIndex = (currentIndex + 1) % imagesLength;
       return { ...prevIndexes, [feedId]: newIndex };
     });
@@ -265,6 +307,31 @@ const FeedPage: React.FC = () => {
     } finally {
       setIsLoading(prev => ({ ...prev, [userId]: false }));
     }
+  };
+
+  const handleToggleMute = (feedId: number) => {
+    setMutedVideos(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(feedId)) {
+        newSet.delete(feedId);
+        if (videoRefs.current[feedId]) {
+          videoRefs.current[feedId].muted = false;
+        }
+      } else {
+        newSet.add(feedId);
+        if (videoRefs.current[feedId]) {
+          videoRefs.current[feedId].muted = true;
+        }
+      }
+      return newSet;
+    });
+  };
+
+  const toggleContentExpansion = (feedId: number) => {
+    setExpandedContents(prev => ({
+      ...prev,
+      [feedId]: !prev[feedId]
+    }));
   };
 
   const handleOpenCreateFeed = () => {
@@ -332,28 +399,16 @@ const FeedPage: React.FC = () => {
                       </div>
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create Feed</p>
                     </div>
-                    <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenReels}>
-                      <div className="text-[#111418]" data-icon="MonitorPlay" data-size="24px" data-weight="regular">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                          <path
-                            d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Zm-3.56-110.66-48-32A8,8,0,0,0,104,88v64a8,8,0,0,0,12.44,6.66l48-32a8,8,0,0,0,0-13.32ZM120,137.05V103l25.58,17Z"
-                          ></path>
-                        </svg>
-                      </div>
+                    <div className="flex items-center gap-3 px-3.5 py-2 cursor-pointer" onClick={handleOpenReels}>
+                      <img className="w-5 h-5" src="/image/reels-icon.png" alt="reels" />
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Reels</p>
                     </div>
-                    <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenCreateReels}>
-                      <div className="text-[#111418]" data-icon="MonitorPlay" data-size="24px" data-weight="regular">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                          <path
-                            d="M208,40H48A24,24,0,0,0,24,64V176a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V64A24,24,0,0,0,208,40Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V64a8,8,0,0,1,8-8H208a8,8,0,0,1,8,8Zm-48,48a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,224Zm-3.56-110.66-48-32A8,8,0,0,0,104,88v64a8,8,0,0,0,12.44,6.66l48-32a8,8,0,0,0,0-13.32ZM120,137.05V103l25.58,17Z"
-                          ></path>
-                        </svg>
-                      </div>
+                    <div className="flex items-center gap-3 px-3.5 py-2 cursor-pointer" onClick={handleOpenCreateReels}>
+                      <img className="w-5 h-5" src="/image/add-reels-icon.png" alt="create reels" />
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Create Reels</p>
                     </div>
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenChat}>
-                      <img className="w-6 h-6" src="https://i.ibb.co/WcxN6vm/chat-icon.png" alt="chat" />
+                      <img className="w-6 h-6" src="/image/chat-icon.png" alt="chat" />
                       <p className="text-[#111418] text-sm font-medium leading-normal hidden md:inline">Chat</p>
                     </div>
                     <div className="flex items-center gap-3 px-3 py-2 cursor-pointer" onClick={handleOpenProfile}>
@@ -437,41 +492,56 @@ const FeedPage: React.FC = () => {
                     </div>
                   </div>
                   <div className="relative flex w-full grow bg-white @container py-3">
-                    {feed.images.length > 1 && (
-                      <>
-                        <button onClick={() => handlePrevImage(feed.id)} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full opacity-50 hover:opacity-100">
-                          &lt;
-                        </button>
-                        <button onClick={() => handleNextImage(feed.id)} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full opacity-50 hover:opacity-100">
-                          &gt;
-                        </button>
-                        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
-                          {feed.images.map((_, index) => (
-                            <div
-                              key={index}
-                              className={`w-2 h-2 rounded-full ${index === currentImageIndexes[feed.id] ? 'bg-gray-800' : 'bg-gray-400'}`}
-                            ></div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    <div className="w-full gap-1 overflow-hidden bg-white @[480px]:gap-2 aspect-[2/3] flex">
-                      <div
-                        className="w-full bg-center bg-no-repeat bg-cover aspect-auto rounded-none flex-1"
-                        style={{ backgroundImage: `url(${getFullImageUrl(feed.images[currentImageIndexes[feed.id] || 0]?.file || '')})` }}
-                      ></div>
-                    </div>
-                  </div>
-                  {feed.site && (
-                    <div className="relative flex w-full grow bg-white @container">
-                      <div className="w-full gap-4">
-                        <div className='flex items-center w-full bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90% rounded'>
-                          <a href={feed.site} target="_blank" rel="noopener noreferrer" className='text-white px-2'>상품 보러 가기</a>
-                        </div>
+                    {feed.type === 'post' && feed.images && feed.images.length > 0 && (
+                      <div className="w-full h-0 pb-[100%] relative">
+                        <img
+                          src={getFullImageUrl(feed.images[currentImageIndexes[feed.id] || 0]?.file || '')}
+                          alt="Post"
+                          className="absolute top-0 left-0 w-full h-full object-cover"
+                        />
+                        {feed.images.length > 1 && (
+                          <>
+                            <button onClick={() => handlePrevImage(feed.id)} className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full opacity-50 hover:opacity-100">
+                              &lt;
+                            </button>
+                            <button onClick={() => handleNextImage(feed.id)} className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-700 text-white p-2 rounded-full opacity-50 hover:opacity-100">
+                              &gt;
+                            </button>
+                            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
+                              {feed.images.map((_, index) => (
+                                <div
+                                  key={`${feed.id}-${index}`}
+                                  className={`w-2 h-2 rounded-full ${index === currentImageIndexes[feed.id] ? 'bg-gray-800' : 'bg-gray-400'}`}
+                                ></div>
+                              ))}
+                            </div>
+                          </>
+                        )}
                       </div>
-                    </div>
-                  )}
-                  <div className="flex flex-wrap gap-4 px-4 py-2 py-2 justify-between">
+                    )}
+                    {feed.type === 'reels' && feed.videos && feed.videos.length > 0 && (
+                      <div className="w-full h-0 pb-[177.78%] relative">
+                        <video
+                          ref={(el) => { if (el) videoRefs.current[feed.id] = el; }}
+                          src={getFullImageUrl(feed.videos[0].file)}
+                          className="absolute top-0 left-0 w-full h-full object-cover"
+                          autoPlay
+                          loop
+                          muted // 항상 음소거 상태로 시작 (브라우저 정책 오류 해결)
+                          playsInline
+                          controls={false}
+                        />
+                        <button
+                          onClick={() => handleToggleMute(feed.id)}
+                          className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full"
+                          aria-label={mutedVideos.has(feed.id) ? "Unmute video" : "Mute video"}
+                        >
+                          {mutedVideos.has(feed.id) ? '🔇' : '🔊'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-4 px-4 py-2 justify-between">
                     <div className="flex items-center justify-center gap-2 px-3 py-2">
                       {feed.is_liked ? (
                         <button onClick={() => handleUnlike(feed.id)} className="text-[#e74c3c]">
@@ -491,15 +561,10 @@ const FeedPage: React.FC = () => {
                     <div className="flex items-center justify-center gap-2 px-3 py-2">
                       <div className="text-[#637588]" data-icon="ChatCircle" data-size="24px" data-weight="regular">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                          <path
-                            d="M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"
-                          ></path>
+                          <path d="M128,24A104,104,0,0,0,36.18,176.88L24.83,210.93a16,16,0,0,0,20.24,20.24l34.05-11.35A104,104,0,1,0,128,24Zm0,192a87.87,87.87,0,0,1-44.06-11.81,8,8,0,0,0-6.54-.67L40,216,52.47,178.6a8,8,0,0,0-.66-6.54A88,88,0,1,1,128,216Z"></path>
                         </svg>
                       </div>
-                      <button
-                        onClick={() => handleOpenCommentPop(feed)}
-                        className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]"
-                      >
+                      <button onClick={() => handleOpenCommentPop(feed)} className="text-[#637588] text-[13px] font-bold leading-normal tracking-[0.015em]">
                         댓글 달기...
                       </button>
                     </div>
@@ -507,36 +572,72 @@ const FeedPage: React.FC = () => {
                       {feed.is_saved ? (
                         <button onClick={() => handleUnsave(feed.id)} className="text-[#ff9800]">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                            <path
-                              d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
-                            ></path>
+                            <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path>
                           </svg>
                         </button>
                       ) : (
                         <button onClick={() => handleSave(feed.id)} className="text-[#637588]">
                           <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                            <path
-                              d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"
-                            ></path>
+                            <path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"></path>
                           </svg>
                         </button>
                       )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="flex flex-col justify-center">
+                    <div className="flex items-center gap-4 w-full">
+                      <div className="flex flex-col justify-center w-full">
                         <div className="flex justify-between">
-                          <p className="text-[#111418] text-base font-semibold leading-normal line-clamp-1">{feed.author.username}</p>
-                          <div className="flex">
-                            <p className="text-sm text-base font-medium leading-normal line-clamp-1 px-2">{feed.content}</p>
+                          <div className="flex flex-col bg-white py-2 w-full">
+                            <div className="flex items-start gap-2 mb-2">
+                              <p className="text-[#111418] text-xs font-semibold leading-normal mr-2">{feed.author.username}</p>
+                              <div className="flex-1">
+                                <p
+                                  className="text-sm text-base font-medium leading-normal"
+                                  style={{ whiteSpace: 'pre-wrap' }}
+                                >
+                                  {expandedContents[feed.id]
+                                    ? feed.content
+                                    : (
+                                      <>
+                                        {feed.content.slice(0, 48)}
+                                        {feed.content.length > 100 && (
+                                          <>
+                                            ...
+                                            <button
+                                              onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                toggleContentExpansion(feed.id);
+                                              }}
+                                              className="text-blue-500 text-sm font-medium ml-1 inline"
+                                            >
+                                              더보기
+                                            </button>
+                                          </>
+                                        )}
+                                      </>
+                                    )
+                                  }
+                                </p>
+                                {expandedContents[feed.id] && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      toggleContentExpansion(feed.id);
+                                    }}
+                                    className="text-blue-500 text-sm font-medium mt-1 self-start"
+                                  >
+                                    접기
+                                  </button>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                         <p className="text-[#637588] text-sm font-normal leading-normal line-clamp-2 cursor-pointer" onClick={() => handleOpenCommentPop(feed)}>댓글 {feed.comment_count}개 모두 보기</p>
                       </div>
-                    </div>
-                    <div className="shrink-0">
-                      <p className="text-[#637588] text-sm font-normal leading-normal">1시간 전</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4 bg-white px-4 min-h-[72px] py-2 justify-between">
@@ -612,8 +713,11 @@ const FeedPage: React.FC = () => {
           </div>
         </div>
       </div>
-      {isCommentPopOpen && selectedFeed && (
+      {isCommentPopOpen && selectedFeed && selectedFeed.type === 'post' && (
         <CommentPop feed={selectedFeed} onClose={handleCloseCommentPop} />
+      )}
+      {isReelsCommentPopOpen && selectedFeed && selectedFeed.type === 'reels' && (
+        <ReelsCommentPop feed={selectedFeed} onClose={handleCloseCommentPop} />
       )}
       {isCreateFeedOpen && (
         <CreateFeed onClose={handleCloseCreateFeed} />

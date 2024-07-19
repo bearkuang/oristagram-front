@@ -65,7 +65,7 @@ const CreateChatModal: React.FC<CreateChatModalProps> = ({ onClose }) => {
     };
 
     return (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-[60]">
             <div className="bg-white w-[600px] h-[800px] flex flex-col rounded-2xl">
                 <div className="flex items-center justify-center p-4 border-b border-gray-300 relative">
                     <span className="text-lg font-semibold">새로운 메시지</span>

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 
-interface CommentPopProps {
+interface ReelsCommentPopProps {
   feed: any;
   onClose: () => void;
 }
@@ -16,19 +16,27 @@ const getFullImageUrl = (url: string | null) => {
   return url;
 };
 
-const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
+const getFullVideoUrl = (url: string | null) => {
+  if (!url) return '';
+  if (url.startsWith('/media/')) {
+    return `http://localhost:8000${url}`;
+  }
+  return url;
+};
+
+const ReelsCommentPop: React.FC<ReelsCommentPopProps> = ({ feed, onClose }) => {
   const [comments, setComments] = useState<any[]>([]);
   const [commentText, setCommentText] = useState('');
   const [parentCommentId, setParentCommentId] = useState<number | null>(null);
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [currentFeed, setCurrentFeed] = useState(feed);
   const [repliesVisibility, setRepliesVisibility] = useState<{ [key: number]: boolean }>({});
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     const fetchComments = async () => {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://localhost:8000/api/posts/${currentFeed.id}/comments/`, {
+        const response = await axios.get(`http://localhost:8000/api/reels/${currentFeed.id}/comments/`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -45,18 +53,15 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const handleAddComment = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-
       const data: { text: string; parent_id?: number } = { text: commentText };
       if (parentCommentId) {
         data.parent_id = parentCommentId;
       }
-
-      const response = await axios.post(`http://localhost:8000/api/posts/${currentFeed.id}/comment/`, data, {
+      const response = await axios.post(`http://localhost:8000/api/reels/${currentFeed.id}/comment/`, data, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
-
       if (response.status === 201) {
         setComments([...comments, response.data]);
         setCommentText('');
@@ -67,42 +72,42 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
     }
   };
 
-  const handleLike = async (postId: number) => {
+  const handleLike = async (id: any) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/like/`, {}, {
+      const response = await axios.post(`http://localhost:8000/api/reels/${currentFeed.id}/like/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       if (response.status === 200) {
-        setCurrentFeed((prevFeed: { like_count: number; }) => ({ ...prevFeed, is_liked: true, like_count: prevFeed.like_count + 1 }));
+        setCurrentFeed((prevFeed: any) => ({ ...prevFeed, is_liked: true, like_count: prevFeed.like_count + 1 }));
       }
     } catch (error) {
-      console.error('Error liking post:', error);
+      console.error('Error liking reels:', error);
     }
   };
 
-  const handleUnlike = async (postId: number) => {
+  const handleUnlike = async (id: any) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unlike/`, {}, {
+      const response = await axios.post(`http://localhost:8000/api/reels/${currentFeed.id}/unlike/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
       });
       if (response.status === 200) {
-        setCurrentFeed((prevFeed: { like_count: number; }) => ({ ...prevFeed, is_liked: false, like_count: prevFeed.like_count - 1 }));
+        setCurrentFeed((prevFeed: any) => ({ ...prevFeed, is_liked: false, like_count: prevFeed.like_count - 1 }));
       }
     } catch (error) {
-      console.error('Error unliking post:', error);
+      console.error('Error unliking reels:', error);
     }
   };
 
   const handleSave = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/mark/`, {}, {
+      const response = await axios.post(`http://localhost:8000/api/reels/${postId}/mark/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -118,7 +123,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   const handleUnsave = async (postId: number) => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`http://localhost:8000/api/posts/${postId}/unmark/`, {}, {
+      const response = await axios.post(`http://localhost:8000/api/reels/${postId}/unmark/`, {}, {
         headers: {
           Authorization: `Bearer ${token}`
         }
@@ -129,14 +134,6 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
     } catch (error) {
       console.error('Error unsaving post:', error);
     }
-  };
-
-  const handlePrevImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex === 0 ? currentFeed.images.length - 1 : prevIndex - 1));
-  };
-
-  const handleNextImage = () => {
-    setCurrentImageIndex((prevIndex) => (prevIndex === currentFeed.images.length - 1 ? 0 : prevIndex + 1));
   };
 
   const handleReply = (username: string, commentId: number) => {
@@ -150,7 +147,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
     if (!repliesVisibility[commentId]) {
       try {
         const token = localStorage.getItem('accessToken');
-        const response = await axios.get(`http://localhost:8000/api/comments/${commentId}/replies/`, {
+        const response = await axios.get(`http://localhost:8000/api/reels/${commentId}/replies/`, {
           headers: {
             Authorization: `Bearer ${token}`
           }
@@ -171,22 +168,15 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white w-[1102px] h-[694px] flex">
-        <div className="relative w-[702px] bg-center bg-no-repeat bg-cover" style={{ backgroundImage: `url(${getFullImageUrl(currentFeed.images[currentImageIndex]?.file)})` }}>
-          {currentFeed.images.length > 1 && (
-            <>
-              <button onClick={handlePrevImage} className="absolute left-0 top-1/2 transform -translate-y-1/2 bg-gray-500 bg-opacity-50 text-white p-2 rounded-full">
-                &lt;
-              </button>
-              <button onClick={handleNextImage} className="absolute right-0 top-1/2 transform -translate-y-1/2 bg-gray-500 bg-opacity-50 text-white p-2 rounded-full">
-                &gt;
-              </button>
-              <div className="absolute bottom-0 w-full flex justify-center pb-2">
-                {currentFeed.images.map((_: any, index: React.Key | null | undefined) => (
-                  <span key={index} className={`mx-1 w-2 h-2 rounded-full ${currentImageIndex === index ? 'bg-white' : 'bg-gray-400'}`}></span>
-                ))}
-              </div>
-            </>
-          )}
+        <div className="relative w-[702px] bg-black flex items-center justify-center">
+          <video
+            ref={videoRef}
+            src={getFullVideoUrl(currentFeed.videos[0]?.file)}
+            className="max-w-full max-h-full"
+            controls
+            autoPlay
+            loop
+          />
         </div>
         <div className="w-[400px] bg-white flex flex-col">
           <div className="flex items-center justify-between p-4 border-b border-gray-300">
@@ -212,10 +202,7 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
                 ></div>
                 <div className="ml-2 flex-1">
                   <span className="block text-sm font-medium text-gray-700">{currentFeed.author.username}</span>
-                  <span
-                    className="block text-sm text-gray-500"
-                    style={{ whiteSpace: 'pre-wrap' }}
-                  >{currentFeed.content}</span>
+                  <span className="block text-sm text-gray-500">{currentFeed.content}</span>
                   <span className="block text-xs text-gray-400">{new Date(currentFeed.created_at).toLocaleString()}</span>
                 </div>
               </div>
@@ -340,4 +327,4 @@ const CommentPop: React.FC<CommentPopProps> = ({ feed, onClose }) => {
   );
 };
 
-export default CommentPop;
+export default ReelsCommentPop;

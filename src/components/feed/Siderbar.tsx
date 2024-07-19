@@ -63,8 +63,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
     return (
         <div
-            className={`fixed top-0 left-0 w-80 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-            style={{ zIndex: 50, display: isOpen ? 'block' : 'none', marginLeft: '240px' }}
+            className={`fixed top-0 left-60 w-80 h-full bg-white shadow-lg transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+            style={{
+                zIndex: 1000,
+                display: isOpen ? 'block' : 'none',
+            }}
         >
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
                 <h2 className="text-xl font-bold">Explore</h2>

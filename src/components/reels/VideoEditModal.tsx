@@ -49,7 +49,7 @@ const VideoEditModal: React.FC<VideoEditModalProps> = ({ video, onComplete, onCl
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" >
             <div className="bg-white w-[1102px] h-[694px] flex flex-col rounded-lg relative">
                 <div className="flex justify-between items-center p-4 border-b">
                     <button onClick={onClose}>뒤로</button>
@@ -57,13 +57,15 @@ const VideoEditModal: React.FC<VideoEditModalProps> = ({ video, onComplete, onCl
                     <button onClick={handleNext}>다음</button>
                 </div>
                 <div className="flex flex-1">
-                    <div className="w-3/4 h-full flex items-center justify-center bg-black">
-                        <video
-                            ref={videoRef}
-                            onTimeUpdate={handleTimeUpdate}
-                            controls
-                            className="max-w-full max-h-full"
-                        />
+                    <div className="w-3/4 h-full flex items-center justify-center bg-black overflow-hidden">
+                        <div className="w-full h-full max-h-[600px] flex items-center justify-center">
+                            <video
+                                ref={videoRef}
+                                onTimeUpdate={handleTimeUpdate}
+                                controls
+                                className="max-w-full max-h-full object-contain"
+                            />
+                        </div>
                     </div>
                     <div className="w-1/4 h-full p-4 flex flex-col justify-start">
                         <div className="mb-4">
@@ -94,7 +96,7 @@ const VideoEditModal: React.FC<VideoEditModalProps> = ({ video, onComplete, onCl
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };
 

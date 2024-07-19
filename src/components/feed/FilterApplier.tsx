@@ -87,9 +87,6 @@ const FilterApplier: React.FC<FilterApplierProps> = ({ images, currentIndex, onA
                     </button>
                 </div>
             </div>
-            <div className="flex-shrink-0">
-                <ImagePagination totalImages={images.length} currentIndex={currentIndex} />
-            </div>
         </div>
     );
 };

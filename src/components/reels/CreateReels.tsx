@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { getFullImageUrl } from '../../services/utils';
 import VideoEditModal from './VideoEditModal';
@@ -22,6 +22,8 @@ const CreateReels: React.FC<CreateReelsProps> = ({ video, onClose, onBack }) => 
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [content, setContent] = useState('');
     const [duration, setDuration] = useState<{ start: number, end: number } | null>(null);
+    const [tags, setTags] = useState<string[]>([]);
+    const [mentions, setMentions] = useState<string[]>([]);
 
     const handleVideoEditComplete = (editedVideo: File, selectedDuration: { start: number, end: number }) => {
         setEditedVideo(editedVideo);
@@ -35,6 +37,8 @@ const CreateReels: React.FC<CreateReelsProps> = ({ video, onClose, onBack }) => 
             const formData = new FormData();
             formData.append('content', content);
             formData.append('files', editedVideo, 'video.mp4');
+            formData.append('tags', JSON.stringify(tags));
+            formData.append('mentions', JSON.stringify(mentions));
             if (duration) formData.append('duration', JSON.stringify(duration));
 
             const response = await axios.post('http://localhost:8000/api/reels/', formData, {
@@ -70,6 +74,21 @@ const CreateReels: React.FC<CreateReelsProps> = ({ video, onClose, onBack }) => 
 
         fetchCurrentUser();
     }, []);
+
+    const extractTagsAndMentions = useCallback((text: string) => {
+        const tagRegex = /#([가-힣a-zA-Z0-9][^\s#@]+)/g;
+        const mentionRegex = /@([가-힣a-zA-Z0-9][^\s#@]+)/g;
+
+        const newTags = Array.from(text.matchAll(tagRegex), match => match[1]);
+        const newMentions = Array.from(text.matchAll(mentionRegex), match => match[1]);
+
+        setTags(newTags);
+        setMentions(newMentions);
+    }, []);
+
+    useEffect(() => {
+        extractTagsAndMentions(content);
+    }, [content, extractTagsAndMentions]);
 
     return (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
@@ -113,10 +132,15 @@ const CreateReels: React.FC<CreateReelsProps> = ({ video, onClose, onBack }) => 
                                 </div>
                                 <textarea
                                     className="p-4 border-b border-gray-300 flex-1 resize-none"
-                                    placeholder="문구 입력..."
+                                    placeholder="문구 입력... (#태그 및 @언급 사용 가능)"
                                     value={content}
                                     onChange={(e) => setContent(e.target.value)}
                                 />
+                                {/* 태그와 언급 표시 (선택적) */}
+                                <div className="p-2">
+                                    <p>태그: {tags.join(', ')}</p>
+                                    <p>언급: {mentions.join(', ')}</p>
+                                </div>
                             </div>
                         </>
                     )}
